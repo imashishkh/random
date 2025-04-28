@@ -1,0 +1,30 @@
+groups:
+  - name: cpu_usage
+    interval: 1m
+    rules:
+      - record: instance:node_cpu_utilization:avg
+        expr: avg without(cpu) (1 - rate(node_cpu_seconds_total{mode="idle"}[5m]))
+  
+  - name: memory_usage
+    interval: 1m
+    rules:
+      - record: instance:node_memory_utilization:avg
+        expr: 1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes
+
+  - name: trading_metrics
+    interval: 30s
+    rules:
+      - record: trading:order_rate:5m
+        expr: sum(rate(trading_orders_total[5m])) by (currency_pair)
+      
+      - record: trading:execution_latency:avg
+        expr: avg(trading_execution_seconds_sum / trading_execution_seconds_count) by (currency_pair)
+        
+  - name: api_metrics
+    interval: 1m
+    rules:
+      - record: api:request_rate:5m
+        expr: sum(rate(http_requests_total[5m])) by (endpoint, method)
+        
+      - record: api:error_rate:5m
+        expr: sum(rate(http_requests_total{status_code=~"5.."}[5m])) by (endpoint) / sum(rate(http_requests_total[5m])) by (endpoint) 

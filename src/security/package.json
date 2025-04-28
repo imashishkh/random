@@ -1,0 +1,33 @@
+{
+  "name": "forex-trading-security",
+  "version": "1.0.0",
+  "description": "Security module for Forex Trading application",
+  "main": "js/index.js",
+  "types": "js/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "./install.sh"
+  },
+  "keywords": [
+    "security",
+    "encryption",
+    "credentials",
+    "secrets"
+  ],
+  "author": "Forex Trading Team",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "keytar": "^7.9.0"
+  },
+  "peerDependencies": {
+    "crypto": "*",
+    "fs": "*",
+    "path": "*",
+    "os": "*",
+    "util": "*"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+} 

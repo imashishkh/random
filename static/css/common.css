@@ -1,0 +1,116 @@
+/* Common styles for the Forex Trading Platform */
+
+/* Base styles */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  background-color: #f8f9fa;
+}
+
+/* Navbar customization */
+.navbar-brand {
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.nav-link {
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* Cards */
+.card {
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  margin-bottom: 1.5rem;
+}
+
+/* Buttons */
+.btn {
+  font-weight: 500;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
+}
+
+.btn-outline-primary {
+  color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.btn-outline-primary:hover {
+  background-color: #0d6efd;
+  color: #fff;
+}
+
+/* Forms */
+.form-control {
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ced4da;
+}
+
+.form-control:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Tables */
+.table {
+  margin-bottom: 0;
+}
+
+.table th {
+  font-weight: 600;
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+footer a {
+  transition: color 0.2s;
+}
+
+footer a:hover {
+  color: #0d6efd !important;
+}
+
+/* Utilities */
+.text-primary {
+  color: #0d6efd !important;
+}
+
+.bg-primary {
+  background-color: #0d6efd !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+} 

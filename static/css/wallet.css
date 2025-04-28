@@ -1,0 +1,131 @@
+/* Wallet Dashboard Styles */
+
+/* Card styling */
+.card {
+  border-radius: 0.5rem;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+.card-header {
+  border-top-left-radius: 0.5rem !important;
+  border-top-right-radius: 0.5rem !important;
+}
+
+/* Transaction table styles */
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Badge styling */
+.badge {
+  padding: 0.5em 0.75em;
+  font-weight: 500;
+}
+
+.badge-deposit {
+  background-color: #28a745;
+}
+
+.badge-withdrawal {
+  background-color: #ffc107;
+}
+
+.badge-transfer {
+  background-color: #17a2b8;
+}
+
+.badge-complete {
+  background-color: #28a745;
+}
+
+.badge-pending {
+  background-color: #ffc107;
+}
+
+.badge-failed {
+  background-color: #dc3545;
+}
+
+.badge-active {
+  background-color: #28a745;
+}
+
+.badge-closed {
+  background-color: #6c757d;
+}
+
+/* Amount styling */
+.amount-positive {
+  color: #28a745;
+}
+
+.amount-negative {
+  color: #dc3545;
+}
+
+/* Loading styles */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Accordion styling */
+.accordion-button:not(.collapsed) {
+  background-color: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+}
+
+.accordion-button:focus {
+  box-shadow: none;
+  border-color: rgba(13, 110, 253, 0.25);
+}
+
+/* Form controls */
+.input-group-text {
+  background-color: #f8f9fa;
+}
+
+.form-control:focus, 
+.form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Alert styling */
+.alert {
+  border-radius: 0.5rem;
+}
+
+/* Animation for alerts */
+@keyframes slideInDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.alert-animated {
+  animation: slideInDown 0.3s ease-out forwards;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+  .card {
+    margin-bottom: 1rem;
+  }
+} 

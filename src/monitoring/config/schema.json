@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Performance Monitoring Configuration",
+  "description": "Configuration schema for the trade performance monitoring system",
+  "type": "object",
+  "properties": {
+    "exchanges": {
+      "type": "array",
+      "description": "List of exchanges to monitor",
+      "items": {
+        "type": "string"
+      },
+      "default": ["binance", "coinbase"]
+    },
+    "pairs": {
+      "type": "array",
+      "description": "List of trading pairs to monitor",
+      "items": {
+        "type": "string"
+      },
+      "default": ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
+    },
+    "collection": {
+      "type": "object",
+      "description": "Configuration for data collection",
+      "properties": {
+        "interval": {
+          "type": "integer",
+          "description": "Collection interval in seconds",
+          "default": 15,
+          "minimum": 1
+        },
+        "max_trade_history": {
+          "type": "integer",
+          "description": "Maximum number of trades to keep in history",
+          "default": 1000,
+          "minimum": 10
+        },
+        "latency_buckets": {
+          "type": "array",
+          "description": "Buckets for latency histograms in seconds",
+          "items": {
+            "type": "number"
+          },
+          "default": [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0]
+        },
+        "slippage_buckets": {
+          "type": "array",
+          "description": "Buckets for slippage histograms in percentage",
+          "items": {
+            "type": "number"
+          },
+          "default": [0.0, 0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+        }
+      },
+      "required": ["interval"]
+    },
+    "analysis": {
+      "type": "object",
+      "description": "Configuration for performance analysis",
+      "properties": {
+        "correlation_threshold": {
+          "type": "number",
+          "description": "Threshold for considering metrics correlated",
+          "default": 0.7,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "anomaly_z_threshold": {
+          "type": "number",
+          "description": "Z-score threshold for anomaly detection",
+          "default": 3.0,
+          "minimum": 0
+        },
+        "time_window": {
+          "type": "integer",
+          "description": "Time window for analysis in seconds",
+          "default": 300,
+          "minimum": 60
+        },
+        "min_samples": {
+          "type": "integer",
+          "description": "Minimum number of samples needed for analysis",
+          "default": 10,
+          "minimum": 3
+        }
+      },
+      "required": ["correlation_threshold", "anomaly_z_threshold"]
+    },
+    "data_sources": {
+      "type": "object",
+      "description": "Configuration for data sources",
+      "properties": {
+        "prometheus": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "Prometheus server URL",
+              "default": "http://localhost:9090"
+            },
+            "step": {
+              "type": "string",
+              "description": "Step interval for Prometheus queries",
+              "default": "15s"
+            }
+          },
+          "required": ["url"]
+        },
+        "csv": {
+          "type": "object",
+          "properties": {
+            "directory": {
+              "type": "string",
+              "description": "Directory containing CSV metric files"
+            },
+            "timestamp_column": {
+              "type": "string",
+              "description": "Name of the column containing timestamps",
+              "default": "timestamp"
+            },
+            "value_column": {
+              "type": "string",
+              "description": "Name of the column containing values",
+              "default": "value"
+            },
+            "timestamp_format": {
+              "type": "string",
+              "description": "Format string for parsing timestamps",
+              "default": null
+            }
+          },
+          "required": ["directory"]
+        }
+      }
+    },
+    "reporting": {
+      "type": "object",
+      "description": "Configuration for report generation",
+      "properties": {
+        "output_directory": {
+          "type": "string",
+          "description": "Directory to save generated reports",
+          "default": "./reports"
+        },
+        "format": {
+          "type": "string",
+          "description": "Output format for reports",
+          "enum": ["html", "json", "both"],
+          "default": "html"
+        },
+        "save_metrics": {
+          "type": "boolean",
+          "description": "Whether to save metrics data with the report",
+          "default": false
+        }
+      },
+      "required": ["output_directory", "format"]
+    },
+    "logging": {
+      "type": "object",
+      "description": "Logging configuration",
+      "properties": {
+        "level": {
+          "type": "string",
+          "description": "Logging level",
+          "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+          "default": "INFO"
+        },
+        "file": {
+          "type": "string",
+          "description": "Log file path",
+          "default": "performance_monitor.log"
+        }
+      }
+    }
+  },
+  "required": ["exchanges", "pairs"]
+} 

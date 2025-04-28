@@ -1,0 +1,97 @@
+[build-system]
+requires = ["setuptools>=42.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "forex-trading-bot"
+version = "0.1.0"
+description = "USDT-Based Forex AI Trading Agent Swarm"
+authors = [
+    {name = "Forex Trading Team", email = "team@forextrading.example.com"},
+]
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+dependencies = [
+    "click>=8.0.0",
+    "rich>=10.0.0",
+    "fastapi>=0.68.0",
+    "uvicorn>=0.15.0",
+    "pydantic>=1.8.0",
+    "python-dotenv>=0.19.0",
+    "structlog",
+    "langchain",
+    "langgraph",
+    "pandas",
+    "numpy",
+    "requests",
+    "aiohttp",
+    "websockets",
+    "redis",
+    "pymongo",
+    "cryptography",
+    "keyring",
+    "pytest",
+    "tenacity",
+    "ccxt",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "flake8",
+    "mypy",
+    "pytest",
+    "pytest-cov",
+]
+
+[project.scripts]
+botctl = "src.cli.bot_cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["*"]
+exclude = ["tests"]
+
+[tool.black]
+line-length = 100
+target-version = ["py38", "py39", "py310"]
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+python_classes = "Test*"
+addopts = "--cov=src" 

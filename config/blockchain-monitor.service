@@ -1,0 +1,21 @@
+[Unit]
+Description=Blockchain Transaction Monitor Service
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=forex
+Group=forex
+WorkingDirectory=/opt/forex
+ExecStart=/opt/forex/venv/bin/python /opt/forex/scripts/start_transaction_monitor.py --daemon
+Restart=on-failure
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=blockchain-monitor
+Environment=PYTHONUNBUFFERED=1
+Environment=BLOCKCHAIN_NETWORK=bsc_mainnet
+
+[Install]
+WantedBy=multi-user.target 

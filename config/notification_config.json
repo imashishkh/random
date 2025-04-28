@@ -1,0 +1,23 @@
+{
+  "email": {
+    "enabled": true,
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "username": "your-email@gmail.com",
+    "password": "your-app-password",
+    "from_email": "trading-bot@yourdomain.com",
+    "recipients": ["admin@yourdomain.com", "analyst@yourdomain.com"],
+    "use_tls": true
+  },
+  "slack": {
+    "enabled": true,
+    "webhook_url": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+    "channel": "#trading-alerts",
+    "username": "ForexTradingBot"
+  },
+  "general": {
+    "environment": "development",
+    "log_notifications": true,
+    "notification_level": "info"
+  }
+} 

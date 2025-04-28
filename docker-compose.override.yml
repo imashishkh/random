@@ -1,0 +1,55 @@
+version: '3.9'
+
+# Development-specific overrides for FX-Swarm Docker Compose
+# This file is automatically used with docker-compose up if present
+# It contains settings that should only apply to development environments
+
+services:
+  # Override the main application service for development
+  fx_swarm:
+    volumes:
+      - .:/app:rw
+      - /app/node_modules # Don't mount node_modules from host
+    ports:
+      - "8000:8000"
+      - "9229:9229" # For Node.js debugging
+    environment:
+      - NODE_ENV=development
+      - DEBUG=true
+      - LOG_LEVEL=debug
+      - ENABLE_SWAGGER=true
+    command: ["npm", "run", "dev"]
+    
+  # Enable development tools for PostgreSQL
+  postgres:
+    ports:
+      - "5432:5432" # Expose Postgres to host for development tools
+    volumes:
+      - ./docker/postgres/dev-init-scripts:/docker-entrypoint-initdb.d/dev:ro
+      - ./data/dev-data:/docker-entrypoint-initdb.d/dev-data:ro
+    
+  # Development Redis settings
+  redis:
+    ports:
+      - "6379:6379" # Expose Redis to host for development tools
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD} --maxmemory ${REDIS_MAX_MEMORY:-256mb} --maxmemory-policy allkeys-lru
+
+  # Development Airflow settings
+  airflow-webserver:
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=true
+      - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=true
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=false
+    volumes:
+      - ./examples/airflow/dags:/opt/airflow/dags:ro
+      - ./examples/airflow/plugins:/opt/airflow/plugins:ro
+      
+  # Development Grafana settings
+  grafana:
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+    volumes:
+      - ./examples/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./docker/grafana/dev-provisioning:/etc/grafana/provisioning:ro 

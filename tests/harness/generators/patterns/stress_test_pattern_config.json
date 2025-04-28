@@ -1,0 +1,29 @@
+{
+    "data_type": "tick",
+    "symbols": ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD"],
+    "rate": 1000,
+    "pattern": "stress_test",
+    "volatility": 0.0002,
+    "base_pattern": "normal",
+    "stress_events": [
+        {
+            "type": "crash",
+            "tick": 10000,
+            "magnitude": 0.05,
+            "duration": 1000
+        },
+        {
+            "type": "spike",
+            "tick": 20000,
+            "magnitude": 0.03,
+            "duration": 500
+        },
+        {
+            "type": "gap",
+            "tick": 30000,
+            "magnitude": -0.02,
+            "duration": 1
+        }
+    ],
+    "realistic_spreads": true
+} 

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Forex Trading Platform - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 text-center mb-4">
+        <h1 class="display-4">Welcome to Forex Trading Platform</h1>
+        <p class="lead">Manage your wallets, trade currencies, and track your investments in one place.</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-wallet text-primary" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">Wallet Management</h5>
+                <p class="card-text">Manage your funds across multiple wallets with different currencies.</p>
+                <a href="{{ url_for('wallet.dashboard') }}" class="btn btn-primary">Go to Wallet</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line text-primary" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">Trading Platform</h5>
+                <p class="card-text">Trade forex markets with real-time charts and analysis tools.</p>
+                <a href="#" class="btn btn-primary">Start Trading</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-globe text-primary" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">Market Information</h5>
+                <p class="card-text">Access market news, rates, and economic calendars.</p>
+                <a href="#" class="btn btn-primary">View Markets</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Getting Started</h5>
+            </div>
+            <div class="card-body">
+                <p>Follow these steps to start trading on our platform:</p>
+                <ol>
+                    <li>Create an account or log in to your existing account</li>
+                    <li>Set up your wallet and deposit funds</li>
+                    <li>Choose your preferred trading pairs</li>
+                    <li>Start trading and monitoring your investments</li>
+                </ol>
+                <p>Our platform offers a secure environment for all your trading needs.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block head %}
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %} 

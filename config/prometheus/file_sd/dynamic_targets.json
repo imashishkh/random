@@ -1,0 +1,16 @@
+[
+  {
+    "targets": ["dynamic-exporter-1:9100"],
+    "labels": {
+      "service": "dynamic-service-1",
+      "environment": "production"
+    }
+  },
+  {
+    "targets": ["dynamic-exporter-2:9100"],
+    "labels": {
+      "service": "dynamic-service-2",
+      "environment": "staging"
+    }
+  }
+] 

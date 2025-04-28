@@ -1,0 +1,795 @@
+{
+  "app": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "default": "Forex Trading System",
+        "doc": "Application name"
+      },
+      "version": {
+        "type": "string",
+        "default": "1.0.0",
+        "doc": "Application version"
+      },
+      "environment": {
+        "type": "string",
+        "enum": ["development", "testing", "production"],
+        "default": "development",
+        "doc": "Application environment"
+      },
+      "debug": {
+        "type": "boolean",
+        "default": false,
+        "doc": "Enable debug mode"
+      },
+      "port": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 65535,
+        "default": 5000,
+        "doc": "Port to run the application on"
+      },
+      "host": {
+        "type": "string",
+        "default": "127.0.0.1",
+        "doc": "Host to bind the application to"
+      },
+      "data_dir": {
+        "type": "string",
+        "default": "data",
+        "doc": "Directory for application data"
+      },
+      "tmp_dir": {
+        "type": "string",
+        "default": "tmp",
+        "doc": "Directory for temporary files"
+      }
+    },
+    "required": ["name", "environment"]
+  },
+  
+  "boot": {
+    "type": "object",
+    "properties": {
+      "startup_sequence": {
+        "type": "array",
+        "items": {"type": "string"},
+        "default": ["database", "cache", "api", "trading_engine"],
+        "doc": "Order of services to start during boot"
+      },
+      "dependency_timeout": {
+        "type": "integer",
+        "minimum": 1,
+        "default": 30,
+        "doc": "Seconds to wait for dependencies before timeout"
+      },
+      "retry_attempts": {
+        "type": "integer",
+        "minimum": 0,
+        "default": 3,
+        "doc": "Number of retry attempts for failed services"
+      },
+      "retry_backoff": {
+        "type": "number",
+        "minimum": 1.0,
+        "default": 2.0,
+        "doc": "Exponential backoff multiplier for retries"
+      },
+      "initial_retry_delay": {
+        "type": "number",
+        "minimum": 0.1,
+        "default": 1.0,
+        "doc": "Initial delay in seconds before first retry"
+      },
+      "force_boot": {
+        "type": "boolean",
+        "default": false,
+        "doc": "Whether to force boot even if non-critical dependencies fail"
+      },
+      "health_check_timeout": {
+        "type": "integer",
+        "minimum": 1,
+        "default": 5,
+        "doc": "Timeout in seconds for individual health checks"
+      },
+      "services": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "doc": "Whether the service is enabled"
+            },
+            "critical": {
+              "type": "boolean",
+              "default": true,
+              "doc": "Whether the service is critical for boot"
+            },
+            "health_check": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["http", "tcp", "database", "filesystem", "custom"],
+                  "default": "http",
+                  "doc": "Type of health check to perform"
+                },
+                "endpoint": {
+                  "type": "string",
+                  "doc": "Endpoint URL or connection string for health check"
+                },
+                "expected_status": {
+                  "type": "integer",
+                  "default": 200,
+                  "doc": "Expected HTTP status code (for HTTP health checks)"
+                },
+                "timeout": {
+                  "type": "integer",
+                  "default": 5,
+                  "doc": "Health check timeout in seconds"
+                },
+                "headers": {
+                  "type": "object",
+                  "doc": "HTTP headers to send with health check request"
+                },
+                "custom_check": {
+                  "type": "string",
+                  "doc": "Python path to custom health check function"
+                }
+              }
+            },
+            "dependencies": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": [],
+              "doc": "Services this service depends on"
+            }
+          }
+        },
+        "doc": "Configuration for individual services"
+      },
+      "exit_handlers": {
+        "type": "array",
+        "items": {"type": "string"},
+        "default": [],
+        "doc": "Python paths to functions that should be called on shutdown"
+      }
+    },
+    "required": ["startup_sequence"],
+    "doc": "Boot process configuration"
+  },
+  
+  "logging": {
+    "type": "object",
+    "properties": {
+      "level": {
+        "type": "string",
+        "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        "default": "INFO",
+        "doc": "Global logging level"
+      },
+      "format": {
+        "type": "string",
+        "default": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        "doc": "Log format string (if not using structured logging)"
+      },
+      "use_json": {
+        "type": "boolean",
+        "default": true,
+        "doc": "Use JSON format for structured logging"
+      },
+      "log_to_console": {
+        "type": "boolean",
+        "default": true,
+        "doc": "Log to console"
+      },
+      "log_to_file": {
+        "type": "boolean",
+        "default": true,
+        "doc": "Log to file"
+      },
+      "log_dir": {
+        "type": "string",
+        "default": "logs",
+        "doc": "Directory for log files"
+      },
+      "max_file_size": {
+        "type": "integer",
+        "default": 10485760,
+        "minimum": 1024,
+        "doc": "Maximum log file size in bytes (10MB default)"
+      },
+      "backup_count": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "doc": "Number of backup log files to keep"
+      },
+      "retention_days": {
+        "type": "integer",
+        "default": 30,
+        "minimum": 1,
+        "doc": "Number of days to keep log files"
+      },
+      "include_hostname": {
+        "type": "boolean",
+        "default": true,
+        "doc": "Include hostname in log records"
+      },
+      "include_process_info": {
+        "type": "boolean",
+        "default": true,
+        "doc": "Include process info in log records"
+      },
+      "sanitize_sensitive_data": {
+        "type": "boolean",
+        "default": true,
+        "doc": "Sanitize sensitive data in logs"
+      },
+      "component_levels": {
+        "type": "object",
+        "properties": {
+          "*": {
+            "type": "string",
+            "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+            "doc": "Specific logging level for a component"
+          }
+        },
+        "doc": "Component-specific logging levels (overrides global level)"
+      }
+    }
+  },
+  
+  "dashboard": {
+    "type": "object",
+    "properties": {
+      "theme": {
+        "type": "string",
+        "enum": ["light", "dark", "auto"],
+        "default": "auto",
+        "doc": "Dashboard UI theme"
+      },
+      "refresh_interval": {
+        "type": "integer",
+        "default": 5000,
+        "minimum": 1000,
+        "doc": "Dashboard refresh interval in milliseconds"
+      },
+      "default_view": {
+        "type": "string",
+        "enum": ["overview", "trading", "wallets", "analytics", "logs"],
+        "default": "overview",
+        "doc": "Default dashboard view"
+      },
+      "chart_style": {
+        "type": "string",
+        "enum": ["candles", "line", "area", "bars"],
+        "default": "candles",
+        "doc": "Default chart style"
+      },
+      "time_frame": {
+        "type": "string",
+        "enum": ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w", "1M"],
+        "default": "1h",
+        "doc": "Default chart time frame"
+      },
+      "indicators": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "doc": "Indicator name"
+            },
+            "params": {
+              "type": "object",
+              "doc": "Indicator parameters"
+            },
+            "visible": {
+              "type": "boolean",
+              "default": true,
+              "doc": "Whether the indicator is visible by default"
+            }
+          },
+          "required": ["name"]
+        },
+        "default": [],
+        "doc": "Default indicators to display on charts"
+      },
+      "layout": {
+        "type": "object",
+        "properties": {
+          "left_sidebar_width": {
+            "type": "integer",
+            "default": 250,
+            "minimum": 150,
+            "maximum": 500,
+            "doc": "Width of the left sidebar in pixels"
+          },
+          "right_sidebar_width": {
+            "type": "integer",
+            "default": 300,
+            "minimum": 150,
+            "maximum": 600,
+            "doc": "Width of the right sidebar in pixels"
+          },
+          "show_headers": {
+            "type": "boolean",
+            "default": true,
+            "doc": "Show section headers"
+          },
+          "compact_mode": {
+            "type": "boolean",
+            "default": false,
+            "doc": "Use compact mode for UI elements"
+          }
+        },
+        "doc": "Dashboard layout configuration"
+      },
+      "notifications": {
+        "type": "object",
+        "properties": {
+          "show_on_dashboard": {
+            "type": "boolean",
+            "default": true,
+            "doc": "Show notifications on dashboard"
+          },
+          "max_count": {
+            "type": "integer",
+            "default": 50,
+            "minimum": 1,
+            "doc": "Maximum number of notifications to keep"
+          },
+          "auto_dismiss": {
+            "type": "boolean",
+            "default": true,
+            "doc": "Automatically dismiss notifications after display time"
+          },
+          "display_time": {
+            "type": "integer",
+            "default": 5000,
+            "minimum": 1000,
+            "doc": "Time to display notifications in milliseconds"
+          }
+        },
+        "doc": "Notification settings"
+      }
+    }
+  },
+  
+  "trading": {
+    "type": "object",
+    "properties": {
+      "default_exchange": {
+        "type": "string",
+        "default": "binance",
+        "doc": "Default exchange to use"
+      },
+      "max_concurrent_trades": {
+        "type": "integer",
+        "default": 5,
+        "minimum": 1,
+        "doc": "Maximum number of concurrent trades"
+      },
+      "risk": {
+        "type": "object",
+        "properties": {
+          "max_risk_per_trade": {
+            "type": "number",
+            "default": 1.0,
+            "minimum": 0.1,
+            "maximum": 10,
+            "doc": "Maximum risk per trade as percentage of account"
+          },
+          "max_daily_risk": {
+            "type": "number",
+            "default": 5.0,
+            "minimum": 0.5,
+            "maximum": 20,
+            "doc": "Maximum daily risk as percentage of account"
+          },
+          "stop_loss_percentage": {
+            "type": "number",
+            "default": 2.0,
+            "minimum": 0.1,
+            "doc": "Default stop loss percentage"
+          },
+          "take_profit_percentage": {
+            "type": "number",
+            "default": 4.0,
+            "minimum": 0.1,
+            "doc": "Default take profit percentage"
+          },
+          "risk_reward_ratio": {
+            "type": "number",
+            "default": 2.0,
+            "minimum": 0.5,
+            "doc": "Target risk/reward ratio"
+          }
+        },
+        "doc": "Risk management settings"
+      },
+      "default_strategy": {
+        "type": "string",
+        "default": "ema_crossover",
+        "doc": "Default trading strategy"
+      },
+      "session_times": {
+        "type": "object",
+        "properties": {
+          "london_open": {
+            "type": "string",
+            "default": "08:00",
+            "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+            "doc": "London session open time (UTC)"
+          },
+          "london_close": {
+            "type": "string",
+            "default": "16:00",
+            "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+            "doc": "London session close time (UTC)"
+          },
+          "new_york_open": {
+            "type": "string",
+            "default": "13:00",
+            "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+            "doc": "New York session open time (UTC)"
+          },
+          "new_york_close": {
+            "type": "string",
+            "default": "21:00",
+            "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+            "doc": "New York session close time (UTC)"
+          },
+          "tokyo_open": {
+            "type": "string",
+            "default": "00:00",
+            "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+            "doc": "Tokyo session open time (UTC)"
+          },
+          "tokyo_close": {
+            "type": "string",
+            "default": "09:00",
+            "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+            "doc": "Tokyo session close time (UTC)"
+          },
+          "sydney_open": {
+            "type": "string",
+            "default": "22:00",
+            "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+            "doc": "Sydney session open time (UTC)"
+          },
+          "sydney_close": {
+            "type": "string",
+            "default": "07:00",
+            "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+            "doc": "Sydney session close time (UTC)"
+          }
+        },
+        "doc": "Trading session times"
+      }
+    }
+  },
+  
+  "security": {
+    "type": "object",
+    "properties": {
+      "session_timeout": {
+        "type": "integer",
+        "default": 3600,
+        "minimum": 60,
+        "doc": "Session timeout in seconds"
+      },
+      "max_login_attempts": {
+        "type": "integer",
+        "default": 5,
+        "minimum": 1,
+        "doc": "Maximum failed login attempts before lockout"
+      },
+      "lockout_duration": {
+        "type": "integer",
+        "default": 1800,
+        "minimum": 300,
+        "doc": "Account lockout duration in seconds"
+      },
+      "password_policy": {
+        "type": "object",
+        "properties": {
+          "min_length": {
+            "type": "integer",
+            "default": 8,
+            "minimum": 6,
+            "doc": "Minimum password length"
+          },
+          "require_uppercase": {
+            "type": "boolean",
+            "default": true,
+            "doc": "Require uppercase letters"
+          },
+          "require_lowercase": {
+            "type": "boolean",
+            "default": true,
+            "doc": "Require lowercase letters"
+          },
+          "require_numbers": {
+            "type": "boolean",
+            "default": true,
+            "doc": "Require numbers"
+          },
+          "require_special": {
+            "type": "boolean",
+            "default": true,
+            "doc": "Require special characters"
+          },
+          "password_expiry_days": {
+            "type": "integer",
+            "default": 90,
+            "minimum": 1,
+            "doc": "Password expiry in days"
+          }
+        },
+        "doc": "Password policy settings"
+      },
+      "api_rate_limit": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true,
+            "doc": "Enable API rate limiting"
+          },
+          "requests_per_minute": {
+            "type": "integer",
+            "default": 60,
+            "minimum": 1,
+            "doc": "Maximum API requests per minute"
+          },
+          "burst": {
+            "type": "integer",
+            "default": 10,
+            "minimum": 1,
+            "doc": "Maximum burst requests"
+          }
+        },
+        "doc": "API rate limiting settings"
+      },
+      "allowed_origins": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": ["http://localhost:3000"],
+        "doc": "Allowed CORS origins"
+      }
+    }
+  },
+  
+  "apis": {
+    "type": "object",
+    "properties": {
+      "binance": {
+        "type": "object",
+        "properties": {
+          "api_key": {
+            "type": "string",
+            "default": "",
+            "doc": "Binance API key"
+          },
+          "secret_key": {
+            "type": "string",
+            "default": "",
+            "doc": "Binance secret key"
+          },
+          "use_testnet": {
+            "type": "boolean",
+            "default": true,
+            "doc": "Use Binance testnet"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 10000,
+            "minimum": 1000,
+            "doc": "API request timeout in milliseconds"
+          }
+        },
+        "doc": "Binance API settings"
+      },
+      "oanda": {
+        "type": "object",
+        "properties": {
+          "api_key": {
+            "type": "string",
+            "default": "",
+            "doc": "OANDA API key"
+          },
+          "account_id": {
+            "type": "string",
+            "default": "",
+            "doc": "OANDA account ID"
+          },
+          "use_practice": {
+            "type": "boolean",
+            "default": true,
+            "doc": "Use OANDA practice account"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 10000,
+            "minimum": 1000,
+            "doc": "API request timeout in milliseconds"
+          }
+        },
+        "doc": "OANDA API settings"
+      },
+      "alpha_vantage": {
+        "type": "object",
+        "properties": {
+          "api_key": {
+            "type": "string",
+            "default": "",
+            "doc": "Alpha Vantage API key"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 10000,
+            "minimum": 1000,
+            "doc": "API request timeout in milliseconds"
+          }
+        },
+        "doc": "Alpha Vantage API settings"
+      }
+    }
+  },
+  
+  "notifications": {
+    "type": "object",
+    "properties": {
+      "email": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": false,
+            "doc": "Enable email notifications"
+          },
+          "smtp_server": {
+            "type": "string",
+            "default": "smtp.gmail.com",
+            "doc": "SMTP server address"
+          },
+          "smtp_port": {
+            "type": "integer",
+            "default": 587,
+            "minimum": 1,
+            "maximum": 65535,
+            "doc": "SMTP server port"
+          },
+          "smtp_user": {
+            "type": "string",
+            "default": "",
+            "doc": "SMTP username"
+          },
+          "smtp_password": {
+            "type": "string",
+            "default": "",
+            "doc": "SMTP password"
+          },
+          "from_address": {
+            "type": "string",
+            "default": "",
+            "doc": "Email from address"
+          },
+          "to_addresses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "doc": "Email to addresses"
+          },
+          "use_tls": {
+            "type": "boolean",
+            "default": true,
+            "doc": "Use TLS for SMTP connection"
+          }
+        },
+        "doc": "Email notification settings"
+      },
+      "telegram": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": false,
+            "doc": "Enable Telegram notifications"
+          },
+          "bot_token": {
+            "type": "string",
+            "default": "",
+            "doc": "Telegram bot token"
+          },
+          "chat_id": {
+            "type": "string",
+            "default": "",
+            "doc": "Telegram chat ID"
+          }
+        },
+        "doc": "Telegram notification settings"
+      },
+      "desktop": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true,
+            "doc": "Enable desktop notifications"
+          },
+          "sound": {
+            "type": "boolean",
+            "default": true,
+            "doc": "Play sound with desktop notifications"
+          },
+          "duration": {
+            "type": "integer",
+            "default": 5000,
+            "minimum": 1000,
+            "doc": "Desktop notification duration in milliseconds"
+          }
+        },
+        "doc": "Desktop notification settings"
+      },
+      "notification_levels": {
+        "type": "object",
+        "properties": {
+          "trade_open": {
+            "type": "string",
+            "enum": ["none", "low", "medium", "high"],
+            "default": "medium",
+            "doc": "Notification level for trade opens"
+          },
+          "trade_close": {
+            "type": "string",
+            "enum": ["none", "low", "medium", "high"],
+            "default": "medium",
+            "doc": "Notification level for trade closes"
+          },
+          "stop_loss_hit": {
+            "type": "string",
+            "enum": ["none", "low", "medium", "high"],
+            "default": "high",
+            "doc": "Notification level for stop loss hits"
+          },
+          "take_profit_hit": {
+            "type": "string",
+            "enum": ["none", "low", "medium", "high"],
+            "default": "medium",
+            "doc": "Notification level for take profit hits"
+          },
+          "system_error": {
+            "type": "string",
+            "enum": ["none", "low", "medium", "high"],
+            "default": "high",
+            "doc": "Notification level for system errors"
+          },
+          "margin_call": {
+            "type": "string",
+            "enum": ["none", "low", "medium", "high"],
+            "default": "high",
+            "doc": "Notification level for margin calls"
+          },
+          "strategy_signal": {
+            "type": "string",
+            "enum": ["none", "low", "medium", "high"],
+            "default": "low",
+            "doc": "Notification level for strategy signals"
+          }
+        },
+        "doc": "Notification level settings for different events"
+      }
+    }
+  }
+} 

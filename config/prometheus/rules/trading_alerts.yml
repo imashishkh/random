@@ -1,0 +1,164 @@
+groups:
+- name: trading_volume
+  rules:
+  # Abnormal trade volume drop
+  - alert: AbnormalTradeVolumeDecrease
+    expr: (avg_over_time(trading_order_volume_total{direction="buy"}[1h]) / avg_over_time(trading_order_volume_total{direction="buy"}[24h]) < 0.5) and on() hour() > 9 and hour() < 20
+    for: 15m
+    labels:
+      severity: warning
+      service: trading
+    annotations:
+      summary: "Abnormal drop in buy trade volume for {{ $labels.currency_pair }}"
+      description: "Buy trade volume has dropped below 50% of the 24h average for {{ $labels.currency_pair }} in the last 15 minutes during trading hours."
+      dashboard: "http://grafana:3000/d/trading_volume"
+      runbook: "https://wiki.example.com/runbooks/trading/abnormal_volume_decrease"
+
+  # Abnormal trade volume spike
+  - alert: AbnormalTradeVolumeIncrease
+    expr: (avg_over_time(trading_order_volume_total{direction="sell"}[5m]) / avg_over_time(trading_order_volume_total{direction="sell"}[1h]) > 3)
+    for: 5m
+    labels:
+      severity: warning
+      service: trading
+    annotations:
+      summary: "Abnormal spike in sell trade volume for {{ $labels.currency_pair }}"
+      description: "Sell trade volume has increased to more than 3x the hourly average for {{ $labels.currency_pair }} in the last 5 minutes."
+      dashboard: "http://grafana:3000/d/trading_volume"
+      runbook: "https://wiki.example.com/runbooks/trading/abnormal_volume_increase"
+
+- name: trading_execution
+  rules:
+  # High error rate in trade execution
+  - alert: HighTradeExecutionErrorRate
+    expr: sum(rate(trading_execution_errors_total[5m])) by (currency_pair) / sum(rate(trading_execution_total[5m])) by (currency_pair) > 0.01
+    for: 5m
+    labels:
+      severity: warning
+      service: trading
+    annotations:
+      summary: "High error rate in trade execution for {{ $labels.currency_pair }}"
+      description: "Error rate in trade execution for {{ $labels.currency_pair }} has been above 1% for the last 5 minutes."
+      dashboard: "http://grafana:3000/d/trading_execution"
+      runbook: "https://wiki.example.com/runbooks/trading/high_execution_error_rate"
+
+  # Critical error rate in trade execution
+  - alert: CriticalTradeExecutionErrorRate
+    expr: sum(rate(trading_execution_errors_total[5m])) by (currency_pair) / sum(rate(trading_execution_total[5m])) by (currency_pair) > 0.05
+    for: 3m
+    labels:
+      severity: critical
+      service: trading
+    annotations:
+      summary: "Critical error rate in trade execution for {{ $labels.currency_pair }}"
+      description: "Error rate in trade execution for {{ $labels.currency_pair }} has been above 5% for the last 3 minutes. Immediate action required."
+      dashboard: "http://grafana:3000/d/trading_execution"
+      runbook: "https://wiki.example.com/runbooks/trading/high_execution_error_rate"
+
+  # High trade execution latency
+  - alert: HighTradeExecutionLatency
+    expr: histogram_quantile(0.95, sum(rate(trading_execution_seconds_bucket[5m])) by (le, currency_pair)) > 0.5
+    for: 5m
+    labels:
+      severity: warning
+      service: trading
+    annotations:
+      summary: "High trade execution latency for {{ $labels.currency_pair }}"
+      description: "95th percentile of trade execution latency for {{ $labels.currency_pair }} has been above 500ms for the last 5 minutes."
+      dashboard: "http://grafana:3000/d/trading_execution"
+      runbook: "https://wiki.example.com/runbooks/trading/high_execution_latency"
+
+  # Critical trade execution latency
+  - alert: CriticalTradeExecutionLatency
+    expr: histogram_quantile(0.95, sum(rate(trading_execution_seconds_bucket[5m])) by (le, currency_pair)) > 1
+    for: 3m
+    labels:
+      severity: critical
+      service: trading
+    annotations:
+      summary: "Critical trade execution latency for {{ $labels.currency_pair }}"
+      description: "95th percentile of trade execution latency for {{ $labels.currency_pair }} has been above 1s for the last 3 minutes. Immediate action required."
+      dashboard: "http://grafana:3000/d/trading_execution"
+      runbook: "https://wiki.example.com/runbooks/trading/high_execution_latency"
+
+- name: trading_agent_health
+  rules:
+  # Agent swarm health degradation
+  - alert: AgentSwarmHealthDegradation
+    expr: sum(forex_agent_status{status="active"}) by (agent_type) < 0.8 * sum(forex_agent_status{status=~"active|inactive"}) by (agent_type)
+    for: 5m
+    labels:
+      severity: warning
+      service: trading
+    annotations:
+      summary: "Agent swarm health degradation for {{ $labels.agent_type }}"
+      description: "Less than 80% of {{ $labels.agent_type }} agents are active. Current active agent count: {{ $value }}."
+      dashboard: "http://grafana:3000/d/agent_health"
+      runbook: "https://wiki.example.com/runbooks/trading/agent_swarm_health"
+
+  # Critical agent swarm health
+  - alert: CriticalAgentSwarmHealth
+    expr: sum(forex_agent_status{status="active"}) by (agent_type) < 0.5 * sum(forex_agent_status{status=~"active|inactive"}) by (agent_type)
+    for: 3m
+    labels:
+      severity: critical
+      service: trading
+    annotations:
+      summary: "Critical agent swarm health for {{ $labels.agent_type }}"
+      description: "Less than 50% of {{ $labels.agent_type }} agents are active. Current active agent count: {{ $value }}. Immediate action required."
+      dashboard: "http://grafana:3000/d/agent_health"
+      runbook: "https://wiki.example.com/runbooks/trading/agent_swarm_health"
+
+  # High agent initialization time
+  - alert: HighAgentInitializationTime
+    expr: histogram_quantile(0.95, sum(rate(forex_agent_initialization_seconds_bucket[15m])) by (le, agent_type)) > 10
+    for: 10m
+    labels:
+      severity: warning
+      service: trading
+    annotations:
+      summary: "High agent initialization time for {{ $labels.agent_type }}"
+      description: "95th percentile of agent initialization time for {{ $labels.agent_type }} has been above 10s for the last 10 minutes."
+      dashboard: "http://grafana:3000/d/agent_health"
+      runbook: "https://wiki.example.com/runbooks/trading/high_agent_initialization_time"
+
+- name: trading_profit_loss
+  rules:
+  # Unusual profit/loss pattern - high loss
+  - alert: UnusualLossPattern
+    expr: sum(rate(trading_profit_loss_total{result="loss"}[1h])) by (currency_pair) > 2 * avg_over_time(sum(rate(trading_profit_loss_total{result="loss"}[1h])) by (currency_pair)[24h:1h])
+    for: 30m
+    labels:
+      severity: warning
+      service: trading
+    annotations:
+      summary: "Unusual loss pattern for {{ $labels.currency_pair }}"
+      description: "Loss rate for {{ $labels.currency_pair }} has been more than 2x the 24h average for the last 30 minutes."
+      dashboard: "http://grafana:3000/d/profit_loss"
+      runbook: "https://wiki.example.com/runbooks/trading/unusual_loss_pattern"
+
+  # Critical loss rate
+  - alert: CriticalLossRate
+    expr: sum(rate(trading_profit_loss_total{result="loss"}[1h])) by (currency_pair) > 3 * avg_over_time(sum(rate(trading_profit_loss_total{result="loss"}[1h])) by (currency_pair)[24h:1h])
+    for: 15m
+    labels:
+      severity: critical
+      service: trading
+    annotations:
+      summary: "Critical loss rate for {{ $labels.currency_pair }}"
+      description: "Loss rate for {{ $labels.currency_pair }} has been more than 3x the 24h average for the last 15 minutes. Immediate action required."
+      dashboard: "http://grafana:3000/d/profit_loss"
+      runbook: "https://wiki.example.com/runbooks/trading/unusual_loss_pattern"
+
+  # Unusual profit/loss ratio
+  - alert: UnusualProfitLossRatio
+    expr: sum(rate(trading_profit_loss_total{result="profit"}[1h])) by (currency_pair) / sum(rate(trading_profit_loss_total{result="loss"}[1h])) by (currency_pair) < 0.5 * avg_over_time(sum(rate(trading_profit_loss_total{result="profit"}[1h])) by (currency_pair) / sum(rate(trading_profit_loss_total{result="loss"}[1h])) by (currency_pair)[1w:1h])
+    for: 1h
+    labels:
+      severity: warning
+      service: trading
+    annotations:
+      summary: "Unusual profit/loss ratio for {{ $labels.currency_pair }}"
+      description: "Profit/loss ratio for {{ $labels.currency_pair }} has been less than 50% of the weekly average for the last hour."
+      dashboard: "http://grafana:3000/d/profit_loss"
+      runbook: "https://wiki.example.com/runbooks/trading/unusual_profit_loss_ratio" 

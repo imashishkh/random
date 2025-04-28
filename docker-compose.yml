@@ -1,0 +1,290 @@
+version: '3.9'
+
+# FX-Swarm Docker Compose Configuration
+# This file defines the core services for the FX-Swarm forex trading application.
+# It includes the main application, database, and cache services.
+# 
+# Health Check Strategy:
+# - All services implement health checks to ensure proper operation
+# - Postgres and Redis are configured as foundational services
+# - The FX-Swarm application starts only after its dependencies are healthy
+# - Startup order: Postgres/Redis → FX-Swarm → Airflow/Grafana
+#
+# Core services:
+# - fx_swarm: The main application service built from the Dockerfile
+# - postgres: PostgreSQL database for persistent storage
+# - redis: Redis for caching and message broker
+# - airflow: Workflow management platform (webserver, scheduler, worker)
+# - grafana: Monitoring and visualization platform
+#
+# Usage: 
+# - Start all services: docker-compose up -d
+# - View logs: docker-compose logs -f
+# - Stop all services: docker-compose down
+# - Check service health: docker-compose ps
+
+services:
+  # Main FX-Swarm Application Service
+  fx_swarm:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    volumes:
+      - .:/app
+    ports:
+      - "127.0.0.1:8000:8000"  # API access, localhost only in production
+    depends_on:
+      postgres:
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_healthy
+        restart: true
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/forex
+      - REDIS_URL=redis://redis:6379/0
+    networks:
+      - frontend_net  # For external API access
+      - backend_net   # For communicating with backend services
+      - monitoring_net  # To expose metrics
+    restart: unless-stopped
+    # Enhanced health check for the application
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s     # Check every 30 seconds
+      timeout: 10s      # Timeout after 10 seconds
+      retries: 3        # Retry 3 times before marking unhealthy
+      start_period: 45s # Allow 45 seconds for the application to initialize
+
+  # PostgreSQL Database Service
+  postgres:
+    image: postgres:13-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+      - ./docker/postgres/init-scripts:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=forex
+      - AIRFLOW_DB=airflow
+      - AIRFLOW_USER=airflow
+      - AIRFLOW_PASSWORD=airflow
+      - GRAFANA_USER=grafana_reader
+      - GRAFANA_PASSWORD=grafana_pass
+    ports:
+      - "127.0.0.1:5432:5432"  # Database access, localhost only
+    networks:
+      - backend_net   # For app communication
+      - data_net      # For data services
+      - monitoring_net  # For Grafana access
+    # Enhanced health check for PostgreSQL
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d forex -h localhost -p 5432"]
+      interval: 10s     # Check every 10 seconds
+      timeout: 5s       # Timeout after 5 seconds
+      retries: 5        # Retry 5 times before marking unhealthy
+      start_period: 30s # Give 30 seconds for initial startup
+    restart: unless-stopped
+
+  # Redis Service for Caching and Message Broker
+  redis:
+    image: redis:7.0-alpine
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    ports:
+      - "127.0.0.1:6379:6379"  # Redis access, localhost only
+    networks:
+      - backend_net   # For app communication
+      - data_net      # For data services
+      - monitoring_net  # For metrics collection
+    # Enhanced health check for Redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s     # Check every 10 seconds
+      timeout: 5s       # Timeout after 5 seconds
+      retries: 3        # Retry 3 times before marking unhealthy
+      start_period: 15s # Give 15 seconds for initial startup
+    restart: unless-stopped
+
+  # Airflow Webserver Service
+  airflow-webserver:
+    image: apache/airflow:2.7.1-python3.9
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW_FERNET_KEY:-}
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW__CORE__PARALLELISM=4
+      - AIRFLOW__CORE__DAG_CONCURRENCY=4
+      - AIRFLOW__WEBSERVER__WEB_SERVER_WORKER_TIMEOUT=120
+    volumes:
+      - airflow_dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+      - airflow_plugins:/opt/airflow/plugins
+      - ./docker/airflow/scripts:/opt/airflow/scripts
+    ports:
+      - "127.0.0.1:8080:8080"  # Airflow UI, localhost only
+    networks:
+      - backend_net   # For app communication
+      - data_net      # For database access
+      - monitoring_net  # For metrics
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    user: "50000:0"
+    command: bash -c "airflow db init && airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password admin && airflow webserver"
+
+  # Airflow Scheduler Service
+  airflow-scheduler:
+    image: apache/airflow:2.7.1-python3.9
+    depends_on:
+      airflow-webserver:
+        condition: service_healthy
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW_FERNET_KEY:-}
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW__SCHEDULER__SCHEDULER_HEARTBEAT_SEC=10
+      - AIRFLOW__CORE__PARALLELISM=4
+      - AIRFLOW__CORE__DAG_CONCURRENCY=4
+    volumes:
+      - airflow_dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+      - airflow_plugins:/opt/airflow/plugins
+    networks:
+      - backend_net   # For app communication
+      - data_net      # For database access
+      - monitoring_net  # For metrics
+    healthcheck:
+      test: ["CMD-SHELL", "airflow jobs check --job-type SchedulerJob --hostname $(hostname)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    user: "50000:0"
+    command: airflow scheduler
+
+  # Airflow Worker Service
+  airflow-worker:
+    image: apache/airflow:2.7.1-python3.9
+    depends_on:
+      airflow-webserver:
+        condition: service_healthy
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW_FERNET_KEY:-}
+      - AIRFLOW__CORE__PARALLELISM=4
+      - AIRFLOW__CELERY__WORKER_CONCURRENCY=4
+    volumes:
+      - airflow_dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+      - airflow_plugins:/opt/airflow/plugins
+    networks:
+      - backend_net   # For app communication
+      - data_net      # For database access
+      - monitoring_net  # For metrics
+    healthcheck:
+      test: ["CMD-SHELL", "celery --app airflow.executors.celery_executor.app inspect ping -d celery@$${HOSTNAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    user: "50000:0"
+    command: airflow celery worker
+
+  # Grafana Service
+  grafana:
+    image: grafana/grafana:10.0.3
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_DATABASE_TYPE=postgres
+      - GF_DATABASE_HOST=postgres:5432
+      - GF_DATABASE_NAME=grafana
+      - GF_DATABASE_USER=grafana_reader
+      - GF_DATABASE_PASSWORD=grafana_pass
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    ports:
+      - "3000:3000"  # Grafana UI, public access
+    networks:
+      - frontend_net  # For UI access
+      - monitoring_net  # For metrics collection
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    user: "472"
+
+# Named volumes for persistent data
+volumes:
+  # PostgreSQL data persistence
+  postgres_data:
+    # Data will persist even if containers are removed
+  
+  # Redis data persistence
+  redis_data:
+    # Ensures cache and message broker data persists between restarts
+    
+  # Airflow data persistence
+  airflow_dags:
+    # Store Airflow DAG definitions
+    
+  airflow_logs:
+    # Store Airflow logs
+    
+  airflow_plugins:
+    # Store Airflow plugins
+    
+  # Grafana data persistence
+  grafana_data:
+    # Store Grafana dashboards, users, and settings
+
+# Network configuration with proper segmentation
+networks:
+  frontend_net:
+    driver: bridge
+    internal: false  # Allows external access
+  backend_net:
+    driver: bridge
+    internal: true   # Internal only
+  data_net:
+    driver: bridge
+    internal: true   # Internal only
+  monitoring_net:
+    driver: bridge
+    internal: false  # Needs external access for Grafana 

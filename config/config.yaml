@@ -1,0 +1,137 @@
+# Forex Trading Bot Configuration
+app:
+  name: "Forex Trading Bot"
+  environment: "development"
+  debug: true
+  port: 5000
+  host: "127.0.0.1"
+  data_dir: "data"
+  tmp_dir: "tmp"
+
+# Add boot configuration section
+boot:
+  startup_sequence:
+    - "database"
+    - "cache"
+    - "api"
+    - "trading_engine"
+  dependency_timeout: 30
+  retry_attempts: 3
+  retry_backoff: 2.0
+  initial_retry_delay: 1.0
+  force_boot: false
+  health_check_timeout: 5
+  services:
+    database:
+      enabled: true
+      critical: true
+      health_check:
+        type: "database"
+        endpoint: "sqlite://data/forex.db"
+        timeout: 5
+      dependencies: []
+    
+    cache:
+      enabled: true
+      critical: false
+      health_check:
+        type: "tcp"
+        endpoint: "127.0.0.1:6379"
+        timeout: 2
+      dependencies:
+        - "database"
+    
+    api:
+      enabled: true
+      critical: true
+      health_check:
+        type: "http"
+        endpoint: "http://127.0.0.1:5000/api/health"
+        expected_status: 200
+        timeout: 5
+        headers:
+          Accept: "application/json"
+      dependencies:
+        - "database"
+        - "cache"
+    
+    trading_engine:
+      enabled: true
+      critical: true
+      health_check:
+        type: "custom"
+        custom_check: "src.utils.health_checks.check_trading_engine"
+        timeout: 10
+      dependencies:
+        - "database"
+        - "api"
+
+# Existing configuration...
+logging:
+  level: "INFO"
+  use_json: true
+  log_to_console: true
+  log_to_file: true
+  log_dir: "logs"
+  max_file_size: 10485760  # 10MB
+  backup_count: 10
+  retention_days: 30
+  
+# Rest of existing configuration...
+api:
+  api_key: ''
+  base_url: https://api.example.com
+  retry_count: 3
+  timeout: 30
+database:
+  database: forex
+  host: localhost
+  password: ''
+  path: data/forex.db
+  port: 5432
+  type: sqlite
+  user: ''
+general:
+  app_name: Forex Trading Dashboard
+  timezone: UTC
+  version: 1.0.0
+notifications:
+  desktop:
+    enabled: true
+    price_alert: true
+    trade_closed: true
+    trade_opened: true
+  email:
+    enabled: false
+    from_address: ''
+    smtp_password: ''
+    smtp_port: 587
+    smtp_server: smtp.example.com
+    smtp_user: ''
+    to_address: ''
+  enabled: true
+security:
+  enable_2fa: false
+  max_login_attempts: 5
+  password_expiry_days: 90
+  session_timeout_minutes: 30
+trading:
+  default_leverage: 50
+  default_lot_size: 0.01
+  default_stop_loss_pips: 50
+  default_take_profit_pips: 100
+  enable_trailing_stop: false
+  max_open_positions: 10
+  risk_per_trade: 0.01
+  trailing_stop_pips: 20
+ui:
+  chart_timeframe: 1h
+  default_currency_pair: EUR/USD
+  favorite_pairs:
+  - EUR/USD
+  - GBP/USD
+  - USD/JPY
+  - AUD/USD
+  refresh_interval: 5
+  table_page_size: 25
+  theme: dark

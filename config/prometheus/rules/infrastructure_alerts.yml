@@ -1,0 +1,200 @@
+groups:
+- name: infrastructure_host
+  rules:
+  # High CPU usage alert
+  - alert: HighCPUUsage
+    expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+    for: 5m
+    labels:
+      severity: warning
+      service: host
+    annotations:
+      summary: "High CPU usage on {{ $labels.instance }}"
+      description: "CPU usage has been above 85% for the last 5 minutes."
+      dashboard: "http://grafana:3000/d/infrastructure"
+      runbook: "https://wiki.example.com/runbooks/infrastructure/high_cpu_usage"
+
+  # Critical CPU usage alert
+  - alert: CriticalCPUUsage
+    expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+    for: 3m
+    labels:
+      severity: critical
+      service: host
+    annotations:
+      summary: "Critical CPU usage on {{ $labels.instance }}"
+      description: "CPU usage has been above 95% for the last 3 minutes. Immediate action required."
+      dashboard: "http://grafana:3000/d/infrastructure"
+      runbook: "https://wiki.example.com/runbooks/infrastructure/high_cpu_usage"
+
+  # Low disk space alert
+  - alert: LowDiskSpace
+    expr: node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} * 100 < 15
+    for: 10m
+    labels:
+      severity: warning
+      service: host
+    annotations:
+      summary: "Low disk space on {{ $labels.instance }}:{{ $labels.mountpoint }}"
+      description: "Disk space is below 15% ({{ $value | printf \"%.2f\" }}%) on {{ $labels.mountpoint }}."
+      dashboard: "http://grafana:3000/d/infrastructure"
+      runbook: "https://wiki.example.com/runbooks/infrastructure/low_disk_space"
+
+  # Critical disk space alert
+  - alert: CriticalDiskSpace
+    expr: node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} * 100 < 5
+    for: 5m
+    labels:
+      severity: critical
+      service: host
+    annotations:
+      summary: "Critical disk space on {{ $labels.instance }}:{{ $labels.mountpoint }}"
+      description: "Disk space is below 5% ({{ $value | printf \"%.2f\" }}%) on {{ $labels.mountpoint }}. Immediate action required."
+      dashboard: "http://grafana:3000/d/infrastructure"
+      runbook: "https://wiki.example.com/runbooks/infrastructure/low_disk_space"
+
+  # High memory usage alert
+  - alert: HighMemoryUsage
+    expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+    for: 5m
+    labels:
+      severity: warning
+      service: host
+    annotations:
+      summary: "High memory usage on {{ $labels.instance }}"
+      description: "Memory usage has been above 90% for the last 5 minutes."
+      dashboard: "http://grafana:3000/d/infrastructure"
+      runbook: "https://wiki.example.com/runbooks/infrastructure/high_memory_usage"
+
+  # Critical memory usage alert
+  - alert: CriticalMemoryUsage
+    expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 95
+    for: 3m
+    labels:
+      severity: critical
+      service: host
+    annotations:
+      summary: "Critical memory usage on {{ $labels.instance }}"
+      description: "Memory usage has been above 95% for the last 3 minutes. Immediate action required."
+      dashboard: "http://grafana:3000/d/infrastructure"
+      runbook: "https://wiki.example.com/runbooks/infrastructure/high_memory_usage"
+
+  # Instance down alert
+  - alert: InstanceDown
+    expr: up == 0
+    for: 1m
+    labels:
+      severity: critical
+      service: host
+    annotations:
+      summary: "Instance {{ $labels.instance }} down"
+      description: "Instance {{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute."
+      dashboard: "http://grafana:3000/d/infrastructure"
+      runbook: "https://wiki.example.com/runbooks/infrastructure/instance_down"
+
+- name: infrastructure_containers
+  rules:
+  # Container high CPU usage
+  - alert: ContainerHighCPUUsage
+    expr: sum by(name, instance) (rate(container_cpu_usage_seconds_total{name!=""}[5m])) * 100 > 90
+    for: 5m
+    labels:
+      severity: warning
+      service: containers
+    annotations:
+      summary: "High CPU usage in container {{ $labels.name }}"
+      description: "Container {{ $labels.name }} on {{ $labels.instance }} has been using more than 90% CPU for the last 5 minutes."
+      dashboard: "http://grafana:3000/d/containers"
+      runbook: "https://wiki.example.com/runbooks/infrastructure/high_container_cpu"
+
+  # Container high memory usage
+  - alert: ContainerHighMemoryUsage
+    expr: (container_memory_usage_bytes{name!=""} / container_spec_memory_limit_bytes{name!=""} * 100) > 90
+    for: 5m
+    labels:
+      severity: warning
+      service: containers
+    annotations:
+      summary: "High memory usage in container {{ $labels.name }}"
+      description: "Container {{ $labels.name }} on {{ $labels.instance }} has been using more than 90% of its memory limit for the last 5 minutes."
+      dashboard: "http://grafana:3000/d/containers"
+      runbook: "https://wiki.example.com/runbooks/infrastructure/high_container_memory"
+
+  # Container restarted
+  - alert: ContainerRestarting
+    expr: changes(container_start_time_seconds{name!=""}[15m]) > 2
+    labels:
+      severity: warning
+      service: containers
+    annotations:
+      summary: "Container {{ $labels.name }} restarting frequently"
+      description: "Container {{ $labels.name }} on {{ $labels.instance }} has restarted more than 2 times in the last 15 minutes."
+      dashboard: "http://grafana:3000/d/containers"
+      runbook: "https://wiki.example.com/runbooks/infrastructure/container_restarting"
+
+- name: infrastructure_database
+  rules:
+  # PostgreSQL high connection usage
+  - alert: PostgresqlHighConnections
+    expr: sum by (instance) (pg_stat_activity_count) / pg_settings_max_connections * 100 > 80
+    for: 5m
+    labels:
+      severity: warning
+      service: database
+    annotations:
+      summary: "High PostgreSQL connections on {{ $labels.instance }}"
+      description: "PostgreSQL instance has been using more than 80% of available connections for the last 5 minutes."
+      dashboard: "http://grafana:3000/d/postgresql"
+      runbook: "https://wiki.example.com/runbooks/infrastructure/postgres_high_connections"
+
+  # PostgreSQL slow queries
+  - alert: PostgresqlSlowQueries
+    expr: pg_stat_activity_max_tx_duration > 60
+    for: 2m
+    labels:
+      severity: warning
+      service: database
+    annotations:
+      summary: "Slow PostgreSQL queries on {{ $labels.instance }}"
+      description: "PostgreSQL has queries running for more than 60 seconds."
+      dashboard: "http://grafana:3000/d/postgresql"
+      runbook: "https://wiki.example.com/runbooks/infrastructure/postgres_slow_queries"
+
+  # MongoDB replication lag
+  - alert: MongodbReplicationLag
+    expr: avg by(instance) (mongodb_mongod_replset_member_optime_date{state="SECONDARY"} - on (set) group_left mongodb_mongod_replset_member_optime_date{state="PRIMARY"}) > 10
+    for: 5m
+    labels:
+      severity: warning
+      service: database
+    annotations:
+      summary: "MongoDB replication lag on {{ $labels.instance }}"
+      description: "MongoDB replication lag is more than 10 seconds on {{ $labels.instance }}."
+      dashboard: "http://grafana:3000/d/mongodb"
+      runbook: "https://wiki.example.com/runbooks/infrastructure/mongodb_replication_lag"
+
+  # Redis high memory usage
+  - alert: RedisHighMemoryUsage
+    expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80
+    for: 5m
+    labels:
+      severity: warning
+      service: cache
+    annotations:
+      summary: "Redis high memory usage on {{ $labels.instance }}"
+      description: "Redis instance on {{ $labels.instance }} has been using more than 80% of its configured maxmemory for the last 5 minutes."
+      dashboard: "http://grafana:3000/d/redis"
+      runbook: "https://wiki.example.com/runbooks/infrastructure/redis_high_memory"
+
+  # Redis high client connections
+  - alert: RedisHighConnectionCount
+    expr: redis_connected_clients > 100
+    for: 5m
+    labels:
+      severity: warning
+      service: cache
+    annotations:
+      summary: "Redis high client connections on {{ $labels.instance }}"
+      description: "Redis instance on {{ $labels.instance }} has more than 100 client connections for the last 5 minutes."
+      dashboard: "http://grafana:3000/d/redis"
+      runbook: "https://wiki.example.com/runbooks/infrastructure/redis_high_connections" 

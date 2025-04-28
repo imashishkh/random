@@ -1,0 +1,143 @@
+{
+  "cooldown_period": 3600,
+  "risk_adjustment": {
+    "regimes": [
+      {
+        "regime_id": 0,
+        "name": "low_risk",
+        "risk_factor": 1.2
+      },
+      {
+        "regime_id": 1,
+        "name": "normal",
+        "risk_factor": 1.0
+      },
+      {
+        "regime_id": 2,
+        "name": "high_risk",
+        "risk_factor": 0.7
+      },
+      {
+        "regime_id": 3,
+        "name": "extreme_risk",
+        "risk_factor": 0.5
+      }
+    ]
+  },
+  "volatility_adjustment": {
+    "baseline_volatility": 0.01,
+    "high_volatility_adjustments": {
+      "stop_loss": 0.05,
+      "take_profit": 0.08,
+      "entry_threshold": 0.006
+    },
+    "low_volatility_adjustments": {
+      "stop_loss": 0.02,
+      "take_profit": 0.04,
+      "entry_threshold": 0.003
+    }
+  },
+  "trend_adjustment": {
+    "uptrend": {
+      "position_size_factor": 1.1,
+      "take_profit_factor": 1.2,
+      "stop_loss_factor": 0.9
+    },
+    "downtrend": {
+      "position_size_factor": 0.9,
+      "take_profit_factor": 0.8,
+      "stop_loss_factor": 1.1
+    },
+    "ranging": {
+      "position_size_factor": 0.8,
+      "take_profit_factor": 0.9,
+      "stop_loss_factor": 0.9
+    }
+  },
+  "time_based_adjustment": {
+    "hours": {
+      "0-6": {
+        "factor": 0.8,
+        "description": "Overnight hours - reduced activity"
+      },
+      "7-9": {
+        "factor": 1.2,
+        "description": "London open"
+      },
+      "10-15": {
+        "factor": 1.1,
+        "description": "Active trading hours"
+      },
+      "16-23": {
+        "factor": 0.9,
+        "description": "Evening hours"
+      }
+    },
+    "days": {
+      "monday": {
+        "factor": 0.9,
+        "description": "First day of the week"
+      },
+      "tuesday": {
+        "factor": 1.0,
+        "description": "Normal day"
+      },
+      "wednesday": {
+        "factor": 1.0,
+        "description": "Normal day"
+      },
+      "thursday": {
+        "factor": 1.0,
+        "description": "Normal day"
+      },
+      "friday": {
+        "factor": 0.9,
+        "description": "End of week"
+      },
+      "saturday": {
+        "factor": 0.7,
+        "description": "Weekend - reduced liquidity"
+      },
+      "sunday": {
+        "factor": 0.7,
+        "description": "Weekend - reduced liquidity"
+      }
+    }
+  },
+  "regime_specific_settings": {
+    "regime_0": {
+      "position_size": 0.05,
+      "entry_threshold": 0.003
+    },
+    "regime_1": {
+      "position_size": 0.03,
+      "entry_threshold": 0.004
+    },
+    "regime_2": {
+      "position_size": 0.02,
+      "entry_threshold": 0.005
+    },
+    "regime_3": {
+      "position_size": 0.01,
+      "entry_threshold": 0.006
+    }
+  },
+  "parameter_bounds": {
+    "position_size": {
+      "min": 0.01,
+      "max": 0.1
+    },
+    "entry_threshold": {
+      "min": 0.002,
+      "max": 0.01
+    },
+    "stop_loss": {
+      "min": 0.01,
+      "max": 0.1
+    },
+    "take_profit": {
+      "min": 0.02,
+      "max": 0.2
+    }
+  }
+} 

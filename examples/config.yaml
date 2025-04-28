@@ -1,0 +1,78 @@
+# Sample configuration file for the trading environment
+
+# Directories for data and logs
+data_directory: "data"
+logs_directory: "logs"
+
+# Redis configuration
+redis:
+  host: "localhost"
+  port: 6379
+  password: null
+  db: 0
+
+# PostgreSQL configuration
+postgres:
+  host: "localhost"
+  port: 5432
+  user: "trading_user"
+  password: "trading_password"
+  database: "trading_db"
+  required_tables:
+    - "trades"
+    - "positions"
+    - "orders"
+
+# Binance API configuration
+binance:
+  api_key: "YOUR_API_KEY_HERE"
+  api_secret: "YOUR_API_SECRET_HERE"
+  base_url: "https://api.binance.com"
+  futures_url: "https://fapi.binance.com"
+  test_mode: true
+
+# Orchestrator configuration
+orchestrator:
+  max_agents: 10
+  health_check_interval: 60
+  auto_restart: true
+  startup_timeout: 30
+
+# Agent configuration
+agents:
+  - name: "trend_follower"
+    enabled: true
+    max_positions: 3
+    symbols:
+      - "BTCUSDT"
+      - "ETHUSDT"
+    risk_percentage: 0.02
+  
+  - name: "mean_reversion"
+    enabled: false
+    max_positions: 2
+    symbols:
+      - "BTCUSDT"
+      - "ETHUSDT"
+    risk_percentage: 0.01
+
+# Logging configuration
+logging:
+  level: "INFO"
+  log_to_file: true
+  log_to_console: true
+  rotate_logs: true
+  max_log_size_mb: 10
+  max_log_files: 5
+
+# Risk management
+risk:
+  max_drawdown_percentage: 10
+  max_daily_loss_percentage: 2
+  max_position_size_usd: 1000
+  slack_webhook_url: "https://hooks.slack.com/services/YOUR_WEBHOOK_URL"
+  notifications:
+    enabled: true
+    channels:
+      - "slack"
+      - "email" 

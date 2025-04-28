@@ -1,0 +1,240 @@
+<div class="row">
+  <!-- Wallet Summary -->
+  <div class="col-md-4">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">Wallet Summary</h5>
+      </div>
+      <div class="card-body">
+        <h6 class="card-subtitle mb-3 text-muted">{{ wallet.name }}</h6>
+        <div class="d-flex justify-content-between mb-3">
+          <span>Balance:</span>
+          <strong>{{ wallet.balance|format_currency(wallet.currency) }}</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-3">
+          <span>Available:</span>
+          <strong>{{ wallet.available|format_currency(wallet.currency) }}</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-3">
+          <span>Reserved:</span>
+          <strong>{{ wallet.reserved|format_currency(wallet.currency) }}</strong>
+        </div>
+        
+        {% if other_wallets %}
+        <div class="dropdown mt-3">
+          <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" id="walletSwitchDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            Switch Wallet
+          </button>
+          <ul class="dropdown-menu w-100" aria-labelledby="walletSwitchDropdown">
+            {% for w in other_wallets %}
+            <li>
+              <button class="dropdown-item wallet-switch-btn" data-wallet-id="{{ w.id }}">
+                {{ w.name }} ({{ w.balance|format_currency(w.currency) }})
+              </button>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  
+  <!-- Recent Transactions -->
+  <div class="col-md-8">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">Recent Transactions</h5>
+      </div>
+      <div class="card-body">
+        {% if transactions %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tx in transactions %}
+              <tr>
+                <td>{{ tx.date|format_datetime }}</td>
+                <td>{{ tx.description }}</td>
+                <td>
+                  <span class="badge {{ tx.type_class }}">{{ tx.type }}</span>
+                </td>
+                <td class="{{ tx.amount_class }}">
+                  {{ tx.amount|format_currency(wallet.currency) }}
+                </td>
+                <td>
+                  <span class="badge {{ tx.status_class }}">{{ tx.status }}</span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">No recent transactions found.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Fund Actions -->
+  <div class="col-md-6">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">Fund Actions</h5>
+      </div>
+      <div class="card-body">
+        <div class="accordion" id="fundActionsAccordion">
+          <!-- Deposit Funds -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="depositHeading">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#depositCollapse" aria-expanded="false" aria-controls="depositCollapse">
+                Deposit Funds
+              </button>
+            </h2>
+            <div id="depositCollapse" class="accordion-collapse collapse" aria-labelledby="depositHeading" data-bs-parent="#fundActionsAccordion">
+              <div class="accordion-body">
+                <form class="wallet-action-form" data-action="deposit">
+                  <div class="mb-3">
+                    <label for="depositAmount" class="form-label">Amount</label>
+                    <div class="input-group">
+                      <span class="input-group-text">{{ wallet.currency }}</span>
+                      <input type="number" class="form-control" id="depositAmount" name="amount" min="0.01" step="0.01" required>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="depositMethod" class="form-label">Payment Method</label>
+                    <select class="form-select" id="depositMethod" name="method" required>
+                      <option value="" selected disabled>Select a method</option>
+                      {% for method in payment_methods %}
+                      <option value="{{ method.id }}">{{ method.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Deposit</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Withdraw Funds -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="withdrawHeading">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#withdrawCollapse" aria-expanded="false" aria-controls="withdrawCollapse">
+                Withdraw Funds
+              </button>
+            </h2>
+            <div id="withdrawCollapse" class="accordion-collapse collapse" aria-labelledby="withdrawHeading" data-bs-parent="#fundActionsAccordion">
+              <div class="accordion-body">
+                <form class="wallet-action-form" data-action="withdraw">
+                  <div class="mb-3">
+                    <label for="withdrawAmount" class="form-label">Amount</label>
+                    <div class="input-group">
+                      <span class="input-group-text">{{ wallet.currency }}</span>
+                      <input type="number" class="form-control" id="withdrawAmount" name="amount" min="0.01" step="0.01" max="{{ wallet.available }}" required>
+                    </div>
+                    <div class="form-text">Available: {{ wallet.available|format_currency(wallet.currency) }}</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="withdrawMethod" class="form-label">Withdrawal Method</label>
+                    <select class="form-select" id="withdrawMethod" name="method" required>
+                      <option value="" selected disabled>Select a method</option>
+                      {% for method in withdrawal_methods %}
+                      <option value="{{ method.id }}">{{ method.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Withdraw</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Transfer Funds -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="transferHeading">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#transferCollapse" aria-expanded="false" aria-controls="transferCollapse">
+                Transfer Funds
+              </button>
+            </h2>
+            <div id="transferCollapse" class="accordion-collapse collapse" aria-labelledby="transferHeading" data-bs-parent="#fundActionsAccordion">
+              <div class="accordion-body">
+                <form class="wallet-action-form" data-action="transfer">
+                  <div class="mb-3">
+                    <label for="transferAmount" class="form-label">Amount</label>
+                    <div class="input-group">
+                      <span class="input-group-text">{{ wallet.currency }}</span>
+                      <input type="number" class="form-control" id="transferAmount" name="amount" min="0.01" step="0.01" max="{{ wallet.available }}" required>
+                    </div>
+                    <div class="form-text">Available: {{ wallet.available|format_currency(wallet.currency) }}</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="transferTo" class="form-label">Transfer To</label>
+                    <select class="form-select" id="transferTo" name="to_wallet_id" required>
+                      <option value="" selected disabled>Select a wallet</option>
+                      {% for w in other_wallets %}
+                      <option value="{{ w.id }}">{{ w.name }} ({{ w.currency }})</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Transfer</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Investment Status -->
+  <div class="col-md-6">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">Investment Status</h5>
+      </div>
+      <div class="card-body">
+        {% if investments %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Market</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>P/L</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for inv in investments %}
+              <tr>
+                <td>{{ inv.market }}</td>
+                <td>{{ inv.amount|format_currency(wallet.currency) }}</td>
+                <td>
+                  <span class="badge {{ inv.status_class }}">{{ inv.status }}</span>
+                </td>
+                <td class="{{ inv.profit_class }}">
+                  {{ inv.profit|format_currency(wallet.currency) }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">No active investments found.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div> 

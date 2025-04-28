@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  # FastAPI application
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../:/app
+    env_file:
+      - ../.env
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - forex_network
+
+  # PostgreSQL database
+  postgres:
+    image: postgres:14-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - ../.env
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${DB_NAME:-forex}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-forex}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - forex_network
+
+  # Redis for caching and task queue
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - forex_network
+
+  # Celery worker for background tasks
+  celery_worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ../:/app
+    env_file:
+      - ../.env
+    depends_on:
+      - redis
+      - postgres
+    command: celery -A src.worker.celery worker --loglevel=info
+    restart: unless-stopped
+    networks:
+      - forex_network
+
+  # Celery beat for scheduled tasks
+  celery_beat:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ../:/app
+    env_file:
+      - ../.env
+    depends_on:
+      - redis
+      - postgres
+      - celery_worker
+    command: celery -A src.worker.celery beat --loglevel=info
+    restart: unless-stopped
+    networks:
+      - forex_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  forex_network:
+    driver: bridge 

@@ -1,0 +1,18 @@
+{
+    "type": "relative",
+    "modifiers": [
+        0.0005,
+        0.0008,
+        0.0010,
+        0.0007,
+        0.0003,
+        -0.0002,
+        -0.0005,
+        -0.0008,
+        -0.0010,
+        -0.0007,
+        -0.0003,
+        0.0002
+    ],
+    "description": "Example cyclical pattern with 12 points, creates a smooth sine-like pattern"
+} 

@@ -1,0 +1,146 @@
+global:
+  # Global SMTP settings
+  smtp_from: 'alertmanager@forextrading.com'
+  smtp_smarthost: 'smtp.example.com:587'
+  smtp_auth_username: 'alertmanager'
+  smtp_auth_password: 'password'  # Use environment variables in production
+  smtp_require_tls: true
+  
+  # Global Slack settings
+  slack_api_url: 'https://hooks.slack.com/services/YOUR_SLACK_WEBHOOK'  # Replace with actual webhook in production
+  
+  # Global resolve timeout
+  resolve_timeout: 5m
+
+# Template files
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# Route tree for alert notifications
+route:
+  # Default receiver if no other route matches
+  receiver: 'ops-email'
+  
+  # Group similar alerts
+  group_by: ['alertname', 'service', 'severity']
+  
+  # Wait for this long to group alerts before sending
+  group_wait: 30s
+  
+  # Wait for this long to send batch of alerts after the first one
+  group_interval: 5m
+  
+  # How long to wait before sending a new alert for the same group
+  repeat_interval: 4h
+  
+  # Child routes
+  routes:
+    # High severity alerts go to both pager and slack
+    - match:
+        severity: critical
+      receiver: 'ops-pager'
+      continue: true  # Continue matching other routes
+    
+    # Trading alerts go to trading team
+    - match:
+        service: trading
+      receiver: 'trading-team'
+      
+    # Database alerts go to database team
+    - match:
+        service: database
+      receiver: 'db-team'
+      
+    # Infrastructure alerts go to ops team
+    - match_re:
+        service: 'host|containers|cache'
+      receiver: 'ops-slack'
+
+# Inhibition rules to prevent alert storms
+inhibit_rules:
+  # Inhibit service-level alerts when the entire instance is down
+  - source_match:
+      alertname: 'InstanceDown'
+    target_match_re:
+      alertname: '.*'
+    equal: ['instance']
+  
+  # Inhibit warning severity alerts when there's a critical alert for the same service
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['service', 'instance']
+
+# Receiver configurations
+receivers:
+  # Default email receiver
+  - name: 'ops-email'
+    email_configs:
+      - to: 'ops@forextrading.com'
+        send_resolved: true
+        html: '{{ template "email.html" . }}'
+  
+  # Pager/SMS receiver for critical alerts
+  - name: 'ops-pager'
+    pagerduty_configs:
+      - service_key: '<PLACEHOLDER_PAGERDUTY_KEY>'  # Replace with actual key in production
+        send_resolved: true
+        description: '{{ .CommonAnnotations.summary }}'
+        details:
+          severity: '{{ .CommonLabels.severity }}'
+          service: '{{ .CommonLabels.service }}'
+          summary: '{{ .CommonAnnotations.description }}'
+          dashboard: '{{ .CommonAnnotations.dashboard }}'
+          runbook: '{{ .CommonAnnotations.runbook }}'
+  
+  # Slack receiver for ops team
+  - name: 'ops-slack'
+    slack_configs:
+      - channel: '#ops-alerts'
+        send_resolved: true
+        title: '{{ .GroupLabels.alertname }}'
+        title_link: '{{ .CommonAnnotations.dashboard }}'
+        text: '{{ .CommonAnnotations.description }}'
+        color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+        actions:
+          - type: button
+            text: 'Runbook'
+            url: '{{ .CommonAnnotations.runbook }}'
+          - type: button
+            text: 'Dashboard'
+            url: '{{ .CommonAnnotations.dashboard }}'
+  
+  # Slack receiver for trading team
+  - name: 'trading-team'
+    slack_configs:
+      - channel: '#trading-alerts'
+        send_resolved: true
+        title: '{{ .GroupLabels.alertname }}'
+        title_link: '{{ .CommonAnnotations.dashboard }}'
+        text: '{{ .CommonAnnotations.description }}'
+        color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+        actions:
+          - type: button
+            text: 'Runbook'
+            url: '{{ .CommonAnnotations.runbook }}'
+          - type: button
+            text: 'Dashboard'
+            url: '{{ .CommonAnnotations.dashboard }}'
+  
+  # Slack receiver for database team
+  - name: 'db-team'
+    slack_configs:
+      - channel: '#db-alerts'
+        send_resolved: true
+        title: '{{ .GroupLabels.alertname }}'
+        title_link: '{{ .CommonAnnotations.dashboard }}'
+        text: '{{ .CommonAnnotations.description }}'
+        color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+        actions:
+          - type: button
+            text: 'Runbook'
+            url: '{{ .CommonAnnotations.runbook }}'
+          - type: button
+            text: 'Dashboard'
+            url: '{{ .CommonAnnotations.dashboard }}' 

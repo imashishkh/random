@@ -1,0 +1,65 @@
+# Forex Trading Dashboard - Development Environment Configuration
+
+# This configuration file contains development-specific settings 
+# that override the default configuration.
+
+general:
+  timezone: "UTC"
+
+logging:
+  level: "DEBUG"  # More verbose in development
+  console_enabled: true
+  file_enabled: true
+  json_enabled: true
+  max_file_size_mb: 10
+  backup_count: 3
+
+database:
+  type: "sqlite"  # Use SQLite in development
+  path: "data/forex_dev.db"
+  
+ui:
+  theme: "dark"
+  refresh_interval: 2  # Faster refresh in development
+  
+security:
+  enable_2fa: false  # Disable 2FA in development
+  session_timeout_minutes: 60  # Longer session timeout in development
+
+# Development-specific settings
+development:
+  enable_mocks: true
+  mock_data_path: "tests/mock_data"
+  hot_reload: true
+  debug_toolbar: true
+
+# Development-specific configuration
+app:
+  debug: true
+  environment: development
+
+boot:
+  # In development, we can be more lenient with boot requirements
+  force_boot: true
+  retry_attempts: 5  # More retries in development
+  services:
+    # Development database configuration
+    database:
+      health_check:
+        endpoint: "sqlite://data/dev_forex.db"
+    
+    # Development API configuration  
+    api:
+      health_check:
+        endpoint: "http://localhost:5000/api/health"
+    
+    # Development cache configuration
+    cache:
+      # In development, cache is optional
+      critical: false
+    
+    # Development trading engine configuration  
+    trading_engine:
+      # In development, use a simulated trading engine
+      health_check:
+        custom_check: "src.utils.health_checks.check_simulated_trading_engine"

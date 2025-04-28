@@ -1,0 +1,42 @@
+{
+    "chains": [
+        {
+            "chain_id": 56,
+            "name": "Binance Smart Chain",
+            "rpc_url": "https://bsc-dataseed.binance.org/",
+            "confirmation_threshold": 12,
+            "poll_interval": 15
+        },
+        {
+            "chain_id": 97,
+            "name": "Binance Smart Chain Testnet",
+            "rpc_url": "https://data-seed-prebsc-1-s1.binance.org:8545/",
+            "confirmation_threshold": 6,
+            "poll_interval": 10
+        }
+    ],
+    "logging": {
+        "level": "INFO",
+        "file": "logs/deposit_monitor.log"
+    },
+    "notifications": {
+        "email": {
+            "enabled": false,
+            "recipients": ["admin@example.com"],
+            "large_deposit_threshold": 10.0
+        },
+        "slack": {
+            "enabled": false,
+            "webhook_url": "",
+            "channel": "#deposits"
+        }
+    },
+    "monitoring": {
+        "refresh_addresses_interval": 300,
+        "unusual_patterns": {
+            "large_deposit_threshold": 10.0,
+            "rapid_deposits_count": 5,
+            "rapid_deposits_window": 3600
+        }
+    }
+} 

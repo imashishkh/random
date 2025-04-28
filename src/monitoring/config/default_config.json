@@ -1,0 +1,36 @@
+{
+  "exchanges": ["binance", "coinbase"],
+  "pairs": ["BTC/USDT", "ETH/USDT", "SOL/USDT"],
+  "collection": {
+    "interval": 15,
+    "max_trade_history": 1000,
+    "latency_buckets": [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0],
+    "slippage_buckets": [0.0, 0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+  },
+  "analysis": {
+    "correlation_threshold": 0.7,
+    "anomaly_z_threshold": 3.0,
+    "time_window": 300,
+    "min_samples": 10
+  },
+  "data_sources": {
+    "prometheus": {
+      "url": "http://localhost:9090",
+      "step": "15s"
+    },
+    "csv": {
+      "directory": "./data/metrics",
+      "timestamp_column": "timestamp",
+      "value_column": "value"
+    }
+  },
+  "reporting": {
+    "output_directory": "./reports",
+    "format": "html",
+    "save_metrics": false
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "performance_monitor.log"
+  }
+} 

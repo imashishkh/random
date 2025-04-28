@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found - 404{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <div class="mt-5 mb-4">
+            <h1 class="display-1 text-muted">404</h1>
+            <h2 class="mb-4">Page Not Found</h2>
+            <p class="lead">The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.</p>
+        </div>
+        
+        <div class="mb-5">
+            <a href="{{ url_for('home') }}" class="btn btn-primary">
+                <i class="fas fa-home me-2"></i>Return to Home
+            </a>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5>Here are some helpful links:</h5>
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <a href="{{ url_for('home') }}" class="text-decoration-none">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-home text-primary me-2"></i>
+                                <span>Home</span>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('wallet.dashboard') }}" class="text-decoration-none">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-wallet text-primary me-2"></i>
+                                <span>Wallet Dashboard</span>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" class="text-decoration-none">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-question-circle text-primary me-2"></i>
+                                <span>Help Center</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block head %}
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %} 

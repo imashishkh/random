@@ -1,0 +1,92 @@
+# Forex Trading System Monitoring Configuration
+
+# General monitoring settings
+general:
+  enabled: true
+  metrics_port: 9090
+  metrics_path: /metrics
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  retention_time: 15d
+
+# Security settings
+security:
+  metrics_auth_enabled: false
+  basic_auth:
+    username: prometheus
+    password: changeme
+  tls_enabled: false
+  tls_cert_file: /etc/prometheus/certs/cert.pem
+  tls_key_file: /etc/prometheus/certs/key.pem
+
+# Node Exporter configuration
+node_exporter:
+  enabled: true
+  port: 9100
+  collectors:
+    enabled:
+      - filesystem
+      - meminfo
+      - diskstats
+      - cpu
+      - netdev
+      - netstat
+      - stat
+      - time
+      - loadavg
+      - vmstat
+    disabled:
+      - nfs
+      - nfsd
+      - pressure
+      - rapl
+      - schedstat
+      - thermal_zone
+  filesystem_ignored_mount_points: "^/(sys|proc|dev|host|etc)($$|/)"
+  filesystem_ignored_fs_types: "^(autofs|binfmt_misc|bpf|cgroup2|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$"
+
+# cAdvisor configuration
+cadvisor:
+  enabled: true
+  port: 8080
+  housekeeping_interval: 10s
+  max_housekeeping_interval: 60s
+  allow_dynamic_housekeeping: true
+
+# PostgreSQL Exporter configuration
+postgres_exporter:
+  enabled: true
+  port: 9187
+  data_source_names:
+    - postgresql://postgres:postgres@postgres:5432/forex?sslmode=disable
+  auto_discover_databases: true
+  exclude_databases:
+    - template0
+    - template1
+  disable_default_metrics: false
+  disable_settings_metrics: false
+  custom_queries: []
+
+# MongoDB Exporter configuration
+mongodb_exporter:
+  enabled: true
+  port: 9216
+  mongodb_uri: mongodb://mongo:mongo@mongodb:27017/forex
+  collect_all: true
+  compatible_mode: false
+  direct_connect: true
+  discovery_mode: false
+
+# Redis Exporter configuration
+redis_exporter:
+  enabled: true
+  port: 9121
+  redis_addr: redis://redis:6379
+  redis_password: ""
+  redis_namespace: redis
+  include_system_metrics: true
+  check_keys: "*"
+  export_client_list: false
+  is_cluster: false
+  skip_tls_verification: true 

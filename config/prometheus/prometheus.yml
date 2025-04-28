@@ -1,0 +1,81 @@
+global:
+  scrape_interval: 15s     # Default scrape interval
+  evaluation_interval: 15s # Default evaluation interval
+  scrape_timeout: 10s      # Default scrape timeout
+  external_labels:
+    environment: production
+    region: us-east
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Rule files to load
+rule_files:
+  - "rules/recording_rules.yml"
+  - "rules/infrastructure_alerts.yml"
+  - "rules/trading_alerts.yml"
+  - "rules/application_alerts.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Infrastructure exporters (30s interval)
+  - job_name: 'node_exporter'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['node_exporter:9100']
+        labels:
+          service: 'host'
+
+  - job_name: 'cadvisor'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['cadvisor:8080']
+        labels:
+          service: 'containers'
+
+  - job_name: 'postgres_exporter'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['postgres_exporter:9187']
+        labels:
+          service: 'database'
+          db_type: 'postgres'
+
+  - job_name: 'mongodb_exporter'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['mongodb_exporter:9216']
+        labels:
+          service: 'database'
+          db_type: 'mongodb'
+
+  - job_name: 'redis_exporter'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['redis_exporter:9121']
+        labels:
+          service: 'cache'
+
+  # Trading-specific exporters (15s interval for critical metrics)
+  - job_name: 'trading_exporter'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['trading_exporter:9180']
+        labels:
+          service: 'trading'
+
+  # File-based service discovery for dynamic targets
+  - job_name: 'file_sd_targets'
+    file_sd_configs:
+      - files:
+        - '/etc/prometheus/file_sd/*.json'
+        refresh_interval: 5m
+    relabel_configs:
+      - source_labels: [__meta_filepath]
+        regex: '.*/([^/]+)\.json'
+        target_label: job
+        replacement: '${1}' 

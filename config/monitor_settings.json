@@ -1,0 +1,60 @@
+{
+  "network": {
+    "bsc_mainnet": {
+      "rpc_url": "https://bsc-dataseed.binance.org/",
+      "chain_id": 56,
+      "block_time": 3,
+      "confirmation_blocks": 12,
+      "retry_interval": 5,
+      "max_retries": 5
+    },
+    "bsc_testnet": {
+      "rpc_url": "https://data-seed-prebsc-1-s1.binance.org:8545/",
+      "chain_id": 97,
+      "block_time": 3,
+      "confirmation_blocks": 6,
+      "retry_interval": 5,
+      "max_retries": 5
+    }
+  },
+  "monitoring": {
+    "enabled": true,
+    "polling_interval": 30,
+    "batch_size": 100,
+    "log_level": "INFO",
+    "confirmation_threshold": 12,
+    "max_blocks_per_batch": 50,
+    "alert_on_reorg": true,
+    "balance_check_interval": 900
+  },
+  "database": {
+    "batch_size": 50,
+    "transaction_retention_days": 90,
+    "max_retry_count": 3,
+    "retry_delay_seconds": 5
+  },
+  "notifications": {
+    "email": {
+      "enabled": true,
+      "recipients": ["admin@example.com"],
+      "send_on_error": true,
+      "send_daily_summary": true
+    },
+    "slack": {
+      "enabled": false,
+      "webhook_url": "",
+      "channel": "blockchain-alerts"
+    }
+  },
+  "security": {
+    "alert_thresholds": {
+      "large_deposit": 100.0,
+      "large_withdrawal": 100.0,
+      "repeated_small_deposits": {
+        "count": 5,
+        "time_window_hours": 1,
+        "max_amount": 1.0
+      }
+    }
+  }
+} 

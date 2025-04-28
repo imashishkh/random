@@ -1,0 +1,71 @@
+# Forex Trading Dashboard - Production Environment Configuration
+
+# This configuration file contains production-specific settings 
+# that override the default configuration.
+
+general:
+  timezone: "UTC"
+
+logging:
+  level: "WARNING"  # Less verbose in production
+  console_enabled: false  # Disable console logging in production
+  file_enabled: true
+  json_enabled: true
+  max_file_size_mb: 50  # Larger log files in production
+  backup_count: 10  # More backups in production
+
+database:
+  type: "postgresql"  # Use PostgreSQL in production
+  host: "db.example.com"
+  port: 5432
+  database: "forex_prod"
+  
+security:
+  enable_2fa: true
+  session_timeout_minutes: 15  # Shorter session timeout for security
+  max_login_attempts: 3  # More strict security in production 
+
+# Production-specific configuration
+app:
+  debug: false
+  environment: production
+
+boot:
+  # In production, we need to be strict about dependencies
+  force_boot: false
+  retry_attempts: 3
+  # More conservative retry settings
+  retry_backoff: 1.5
+  initial_retry_delay: 2.0
+  services:
+    # Production database configuration
+    database:
+      critical: true
+      health_check:
+        endpoint: "postgresql://forex_user:password@db.example.com:5432/forex_production"
+        type: "database"
+    
+    # Production API configuration
+    api:
+      critical: true
+      health_check:
+        endpoint: "https://api.example.com/health"
+        headers:
+          Authorization: "Bearer ${API_TOKEN}"
+    
+    # Production cache configuration
+    cache:
+      critical: true
+      health_check:
+        endpoint: "redis.example.com:6379"
+        type: "tcp"
+    
+    # Production trading engine configuration
+    trading_engine:
+      critical: true
+      health_check:
+        custom_check: "src.utils.health_checks.check_trading_engine"
+        timeout: 20  # Longer timeout in production
+        
+# Rest of production config
+# existing config entries... 

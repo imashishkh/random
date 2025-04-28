@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - 500{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <div class="mt-5 mb-4">
+            <h1 class="display-1 text-muted">500</h1>
+            <h2 class="mb-4">Server Error</h2>
+            <p class="lead">Sorry, something went wrong on our end. We're working to fix the issue.</p>
+        </div>
+        
+        <div class="mb-5">
+            <a href="{{ url_for('home') }}" class="btn btn-primary">
+                <i class="fas fa-home me-2"></i>Return to Home
+            </a>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5>What you can do:</h5>
+                <ul class="list-unstyled text-start mt-4">
+                    <li class="mb-3">
+                        <i class="fas fa-redo-alt text-primary me-2"></i>
+                        Refresh the page and try again
+                    </li>
+                    <li class="mb-3">
+                        <i class="fas fa-clock text-primary me-2"></i>
+                        Try again later as the issue might be temporary
+                    </li>
+                    <li class="mb-3">
+                        <i class="fas fa-envelope text-primary me-2"></i>
+                        If the problem persists, please contact our support team
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block head %}
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %} 

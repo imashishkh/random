@@ -1,0 +1,11 @@
+{
+    "data_type": "tick",
+    "symbols": ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD"],
+    "rate": 1000,
+    "pattern": "cyclical",
+    "volatility": 0.0002,
+    "cycle_amplitude": 0.005,
+    "cycle_frequency": 0.0001,
+    "cycle_phase_offset": 0,
+    "realistic_spreads": true
+} 

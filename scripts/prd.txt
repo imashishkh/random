@@ -1,0 +1,105 @@
+# Overview  
+FX‑Swarm is a Python‑first platform that lets everyday and pro traders spin‑up an **autonomous swarm of AI trading agents** on the Binance exchange with USDT.  
+Today the repo contains solid building blocks—RL agents, a ccxt exchange wrapper, data pipelines—but it lacks a seamless **CLI onboarding flow, sub‑account wallet management, secure secret handling, and a single "one‑command" launch experience**.  
+This PRD specifies the missing functionality required to reach a production‑ready v1.
+
+# Core Features  
+
+| Feature | What it Does | Why it Matters | How it Works (Target State) |
+|---------|--------------|----------------|-----------------------------|
+| **CLI Wizard (`botctl wizard`)** | Interactive KYC + Binance sub‑account creation, API‑key generation, encrypted storage | Removes manual account setup friction | Built with `click` & `rich`; uses Binance `/sub-account/virtualSubAccount` + `/apiKey` endpoints; secrets stored in OS keychain |
+| **One‑Command Launch (`botctl start`)** | Boots env, orchestrator, agents, risk manager in one shot | Ensures deterministic startup across Docker/host | Wrapper script `boot.py` loads config → builds Binance client → spawns orchestrator |
+| **Live WebSocket Market Feed** | Streams real‑time ticks into a shared queue | Eliminates REST‑poll latency; required for scalping | `exchange/websocket/binance_ws_listener.py` maintains reconnect & back‑pressure control |
+| **Agent Swarm Orchestrator** | Supervises N workers, health‑checks, restarts | Keeps fleet alive during API hiccups | `orchestrator/engine.py` rebuilt around asyncio task‑groups |
+| **Risk & Position Manager** | Global limits, per‑agent exposure caps | Prevents uncontrolled blow‑ups | Real‑time positions pulled from Binance `/fapi/v2/positionRisk`; enforces soft/hard stops |
+| **Profit / Loss & Wallet Commands** | `botctl wallet|profit|loss` show real‑time PnL | Essential user feedback | Aggregates fills from local Postgres + Binance `/myTrades` |
+| **ASCII Agent Graph (LangStudio‑style)** | Visualises agent DAG + edge logs in terminal | Debug‑time insight | Uses `textual` to render live node/edge view |
+| **Secure Secret Handling** | AES‑GCM encrypts API keys at rest | Minimises breach blast radius | `keyring` backend on desktop; KMS when deployed in cloud |
+| **Dockerised Stack** | Single image w/ Redis, Postgres, Airflow sidecars | Portable, reproducible | `docker-compose.yml` adds services + health‑checks |
+
+# User Experience  
+
+*Personas*  
+1. **Power‑Retail Trader** – wants push‑button passive trading.  
+2. **Algo‑Engineer** – tweaks agent configs, retrains models nightly.
+
+*Key Flows*  
+1. `pip install fx‑swarm` → `botctl wizard` → sub‑account & deposit‑addr.  
+2. `botctl start --agents 6` → live trading.  
+3. `botctl profit --since 2025‑04‑20` to view realised PnL.  
+4. `botctl stop` for graceful shutdown.
+
+*UI/UX Considerations*  
+* Colour‑coded statuses (green = running, yellow = degraded).  
+* Emoji shorthand (`✔`, `⚠️`) for quick scanning.  
+* Copy‑paste‑safe secret prompts (input masking).
+
+# Technical Architecture  
+
+* **Components**  
+  * `botctl` CLI (package) – command group, wizard, log viewer  
+  * `exchange/` – REST + WebSocket clients, rate limiter  
+  * `orchestrator/engine.py` – agent scheduler + watchdog  
+  * `agents/` – strategy implementations (DQN, TD‑DDPG, momentum)  
+  * `risk/manager.py` – cross‑agent risk caps, kill‑switch  
+  * `analytics/` – trade store (Postgres) + PnL calc  
+  * Redis Pub/Sub – intra‑service event bus  
+  * Airflow – nightly retraining DAGs  
+
+* **Data Models**  
+  * `TradeFill`, `Position`, `AgentState`, `RiskAlert` tables.  
+  * Encrypted `Credential` record keyed by sub‑account ID.
+
+* **APIs & Integrations**  
+  * Binance REST (v3, /sapi) + WebSocket (ws/api)  
+  * Keyring or Cloud KMS for secret‑store  
+  * Optional Slack webhook for risk alerts.
+
+* **Infrastructure**  
+  * Docker Compose: `fx-swarm`, `redis`, `postgres`, `airflow`, `grafana`.  
+  * Suggested cloud target: AWS (EC2 + RDS + EKS) or GCP Cloud Run.
+
+# Development Roadmap  
+
+| Phase | Scope (No timelines) |
+|-------|----------------------|
+| **0 – Foundation** | • Refactor config loader<br/>• Write encrypted secret manager<br/>• Harden ccxt wrapper |
+| **1 – MVP Trading Loop** | • Build CLI wizard & start/stop commands<br/>• Implement WebSocket listener<br/>• Launch single‑agent trading with risk guard |
+| **2 – Swarm Orchestration** | • Async orchestrator<br/>• Health watchdog & restart logic<br/>• Multi‑agent position netting |
+| **3 – UX & Observability** | • ASCII agent graph view<br/>• PnL & wallet commands<br/>• Prometheus exporters |
+| **4 – Advanced AI** | • Ensemble voting<br/>• On‑policy RL finetune via Airflow<br/>• Parameter server for shared memory |
+| **5 – Enterprise Hardening** | • IP‑restricted API keys<br/>• Two‑man rule for withdrawals<br/>• SOC2 logging pipeline |
+
+# Logical Dependency Chain  
+
+1. **Config → Secret Store** – everything reads creds.  
+2. **Exchange Layer** – required before agents.  
+3. **Risk Manager** – gatekeeper for agents.  
+4. **CLI & Orchestrator** – user's entry‑point; spawns agents.  
+5. **Analytics** – subscribes to trade events; non‑blocking.  
+6. **UI (ASCII graph)** – visualises states; purely read‑only.
+
+# Risks and Mitigations  
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| Binance API rate limits / trading bans | Medium | High | Throttle, back‑off, use sub‑accounts |
+| No programmatic KYC for new master accounts | Certain | Medium | Require human master account; automate *sub‑account* only |
+| Compromised API keys | Low | Catastrophic | Encrypt at rest, IP‑whitelist, least‑privilege keys |
+| Agent over‑fit to back‑test | Medium | High | Live‑/paper‑trade modes, walk‑forward validation |
+| Unexpected exchange outages | Medium | High | Circuit‑breaker, fail‑safe stop‑loss, reconnect logic |
+| Docker mis‑config exposes ports | Low | Medium | Compose `network_mode: bridge`, firewall rules |
+
+# Appendix  
+
+* **Binance Endpoint Cheatsheet**  
+  * `POST /sapi/v1/sub-account/virtualSubAccount` – create wallet  
+  * `POST /sapi/v1/asset/dust` – consolidate small balances  
+  * `GET  /fapi/v2/positionRisk` – open positions  
+
+* **Research Links**  
+  * LangGraph / LangStudio agent DAG visualiser docs  
+  * ccxt rate‑limit patterns  
+
+* **Open‑Source Packages Adopted**  
+  * `ccxt`, `rich`, `textual`, `click`, `keyring`, `rapidfuzz`, `pydantic` 

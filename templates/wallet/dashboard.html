@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Wallet Dashboard{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/wallet.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <h1 class="mb-4">Wallet Dashboard</h1>
+  
+  <div id="wallet-dashboard-container">
+    <!-- Dashboard will be loaded here via AJAX -->
+    <div class="text-center p-5">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3">Loading wallet data...</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  $(document).ready(function() {
+    // Load dashboard content
+    loadDashboard();
+    
+    // Set up event delegation for dashboard interactions
+    $('#wallet-dashboard-container').on('click', '.wallet-switch-btn', function() {
+      const walletId = $(this).data('wallet-id');
+      switchWallet(walletId);
+    });
+    
+    $('#wallet-dashboard-container').on('submit', '.wallet-action-form', function(e) {
+      e.preventDefault();
+      const action = $(this).data('action');
+      const formData = $(this).serializeArray();
+      
+      // Convert form data to object
+      const params = {};
+      formData.forEach(item => {
+        params[item.name] = item.value;
+      });
+      
+      // Add validation feedback
+      let isValid = true;
+      if (action === 'withdraw' || action === 'transfer') {
+        const amount = parseFloat(params.amount || 0);
+        const available = parseFloat($(this).find('[name="amount"]').attr('max') || 0);
+        
+        if (amount > available) {
+          showAlert('danger', `Insufficient funds. You can only ${action} up to ${available}`);
+          isValid = false;
+        }
+      }
+      
+      if (isValid) {
+        // Show loading state
+        const submitBtn = $(this).find('button[type="submit"]');
+        const originalText = submitBtn.text();
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
+        
+        processAction(action, params, function() {
+          // Reset button state on completion
+          submitBtn.prop('disabled', false).text(originalText);
+        });
+      }
+    });
+    
+    // Refresh data periodically (every 30 seconds)
+    setInterval(function() {
+      loadDashboard(true);
+    }, 30000);
+  });
+  
+  function loadDashboard(silent = false) {
+    if (!silent) {
+      // Show loading spinner only if not silent refresh
+      $('#wallet-dashboard-container').html(`
+        <div class="text-center p-5">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-3">Loading wallet data...</p>
+        </div>
+      `);
+    }
+    
+    $.ajax({
+      url: "{{ url_for('wallet.get_dashboard_data') }}",
+      method: "GET",
+      success: function(response) {
+        if (response.status === 'success') {
+          if (!silent || $('#wallet-dashboard-container').find('.spinner-border').length > 0) {
+            // Only update if silent=false or if we're showing a spinner (first load)
+            $('#wallet-dashboard-container').html(response.html);
+          }
+        } else {
+          showAlert('warning', response.message || 'Failed to load wallet dashboard');
+        }
+      },
+      error: function(xhr) {
+        if (!silent) {
+          // Only show error if not a silent refresh
+          let errorMsg = 'Failed to load wallet dashboard';
+          try {
+            const response = JSON.parse(xhr.responseText);
+            if (response.message) errorMsg = response.message;
+          } catch (e) {}
+          
+          $('#wallet-dashboard-container').html(`
+            <div class="alert alert-danger">
+              <h4 class="alert-heading">Error Loading Dashboard</h4>
+              <p>${errorMsg}</p>
+              <hr>
+              <button class="btn btn-outline-danger" onclick="loadDashboard()">
+                <i class="fas fa-sync-alt me-2"></i>Try Again
+              </button>
+            </div>
+          `);
+        }
+      }
+    });
+  }
+  
+  function switchWallet(walletId) {
+    $.ajax({
+      url: "{{ url_for('wallet.switch_wallet') }}",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({ wallet_id: walletId }),
+      success: function(response) {
+        if (response.status === 'success') {
+          loadDashboard();
+        } else {
+          showAlert('warning', response.message || 'Failed to switch wallet');
+        }
+      },
+      error: function(xhr) {
+        let errorMsg = 'Failed to switch wallet';
+        try {
+          const response = JSON.parse(xhr.responseText);
+          if (response.message) errorMsg = response.message;
+        } catch (e) {}
+        
+        showAlert('danger', errorMsg);
+      }
+    });
+  }
+  
+  function processAction(action, params, callback) {
+    $.ajax({
+      url: "{{ url_for('wallet.process_action') }}",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({
+        action: action,
+        params: params
+      }),
+      success: function(response) {
+        if (response.status === 'success') {
+          loadDashboard();
+          showAlert('success', response.message || 'Action processed successfully');
+        } else {
+          showAlert('warning', response.message || 'Failed to process action');
+        }
+        
+        if (typeof callback === 'function') callback();
+      },
+      error: function(xhr) {
+        let errorMsg = 'Failed to process action';
+        try {
+          const response = JSON.parse(xhr.responseText);
+          if (response.message) errorMsg = response.message;
+        } catch (e) {}
+        
+        showAlert('danger', errorMsg);
+        
+        if (typeof callback === 'function') callback();
+      }
+    });
+  }
+  
+  function showAlert(type, message) {
+    const alertHtml = `
+      <div class="alert alert-${type} alert-dismissible fade show alert-animated" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    `;
+    
+    // Insert at the top of the dashboard
+    $('#wallet-dashboard-container').prepend(alertHtml);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(function() {
+      $('.alert-animated').alert('close');
+    }, 5000);
+  }
+</script>
+{% endblock %} 

@@ -1,0 +1,137 @@
+version: '3.9'
+
+# Production-specific configuration for FX-Swarm Docker Compose
+# This file should be used with docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+# It configures production settings and uses Docker secrets for sensitive information
+
+services:
+  # Production configuration for main application
+  fx_swarm:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: ${APP_CPU_LIMIT:-2.0}
+          memory: ${APP_MEMORY_LIMIT:-4G}
+    secrets:
+      - postgres_password
+      - redis_password
+    environment:
+      - NODE_ENV=production
+      - DEBUG=false
+      - LOG_LEVEL=warn
+      - ENABLE_SWAGGER=false
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+    # Use production-ready process manager
+    command: ["node", "app.js"]
+
+  # Production PostgreSQL settings
+  postgres:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: ${POSTGRES_CPU_LIMIT:-2.0}
+          memory: ${POSTGRES_MEMORY_LIMIT:-4G}
+    secrets:
+      - postgres_password
+    environment:
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+
+  # Production Redis settings
+  redis:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: ${REDIS_CPU_LIMIT:-1.0}
+          memory: ${REDIS_MEMORY_LIMIT:-4G}
+    secrets:
+      - redis_password
+    command: redis-server --appendonly yes --requirepass-file /run/secrets/redis_password --maxmemory ${REDIS_MAX_MEMORY:-4gb} --maxmemory-policy allkeys-lru
+
+  # Production Airflow settings
+  airflow-webserver:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "2G"
+    secrets:
+      - airflow_fernet_key
+      - airflow_password
+      - postgres_password
+    environment:
+      - AIRFLOW__CORE__FERNET_KEY_FILE=/run/secrets/airflow_fernet_key
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${AIRFLOW_USER}:${AIRFLOW_PASSWORD}@postgres:5432/${AIRFLOW_DB}
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=false
+      - AIRFLOW__WEBSERVER__INSTANCE_NAME=FX-Swarm-Production
+
+  # Production Airflow scheduler settings
+  airflow-scheduler:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "2G"
+    secrets:
+      - airflow_fernet_key
+      - airflow_password
+      - postgres_password
+    environment:
+      - AIRFLOW__CORE__FERNET_KEY_FILE=/run/secrets/airflow_fernet_key
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${AIRFLOW_USER}:${AIRFLOW_PASSWORD}@postgres:5432/${AIRFLOW_DB}
+
+  # Production Airflow worker settings
+  airflow-worker:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: "4G"
+    secrets:
+      - airflow_fernet_key
+      - airflow_password
+      - postgres_password
+    environment:
+      - AIRFLOW__CORE__FERNET_KEY_FILE=/run/secrets/airflow_fernet_key
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${AIRFLOW_USER}:${AIRFLOW_PASSWORD}@postgres:5432/${AIRFLOW_DB}
+
+  # Production Grafana settings
+  grafana:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "1G"
+    secrets:
+      - grafana_admin_password
+      - grafana_db_password
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD_FILE=/run/secrets/grafana_admin_password
+      - GF_DATABASE_PASSWORD_FILE=/run/secrets/grafana_db_password
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_SECURITY_ALLOW_EMBEDDING=false
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      - GF_USERS_ALLOW_SIGN_UP=false
+
+# Define Docker secrets for sensitive information
+secrets:
+  postgres_password:
+    file: ./docker/secrets/postgres_password.txt
+  redis_password:
+    file: ./docker/secrets/redis_password.txt
+  airflow_fernet_key:
+    file: ./docker/secrets/airflow_fernet_key.txt
+  airflow_password:
+    file: ./docker/secrets/airflow_password.txt
+  grafana_admin_password:
+    file: ./docker/secrets/grafana_admin_password.txt
+  grafana_db_password:
+    file: ./docker/secrets/grafana_db_password.txt 

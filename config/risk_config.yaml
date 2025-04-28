@@ -1,0 +1,35 @@
+# Risk Management Configuration
+
+# Position sizing limits
+max_risk_per_trade: 0.02                # Maximum risk per trade as a percentage of equity (2%)
+max_asset_exposure: 0.10                # Maximum exposure per asset as a percentage of equity (10%)
+max_class_exposure: 0.25                # Maximum exposure per asset class as a percentage of equity (25%)
+max_total_exposure: 0.75                # Maximum total exposure as a percentage of equity (75%)
+default_position_sizer: "fixed_percentage"
+
+# Global risk limits
+max_global_exposure: 0.80               # Maximum global exposure as a percentage of equity (80%)
+position_update_interval: 60            # Position update interval in seconds
+
+# Asset class specific limits
+asset_class_limits:
+  forex: 0.40                          # Maximum exposure for forex as a percentage of equity (40%)
+  crypto: 0.30                         # Maximum exposure for crypto as a percentage of equity (30%)
+  stocks: 0.40                         # Maximum exposure for stocks as a percentage of equity (40%)
+  commodities: 0.20                    # Maximum exposure for commodities as a percentage of equity (20%)
+  bonds: 0.15                          # Maximum exposure for bonds as a percentage of equity (15%)
+
+# Symbol specific limits (overrides default max_asset_exposure)
+symbol_limits:
+  BTCUSDT: 0.05                        # Maximum exposure for BTCUSDT as a percentage of equity (5%)
+  EURUSD: 0.08                         # Maximum exposure for EURUSD as a percentage of equity (8%)
+  GOLD: 0.07                           # Maximum exposure for GOLD as a percentage of equity (7%)
+
+# Circuit breaker parameters
+circuit_breaker_enabled: true           # Whether circuit breakers are enabled
+volatility_threshold: 3.0               # Volatility multiplier threshold (3x normal volatility)
+price_change_threshold: 0.05            # Sudden price change threshold (5%)
+circuit_breaker_timeout: 300            # Circuit breaker timeout in seconds (5 minutes)
+
+# Emergency shutdown parameters
+auto_emergency_shutdown: false           # Whether to automatically trigger emergency shutdown on hard violations 

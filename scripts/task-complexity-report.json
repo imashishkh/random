@@ -1,0 +1,211 @@
+{
+  "meta": {
+    "generatedAt": "2025-04-23T20:05:51.606Z",
+    "tasksAnalyzed": 25,
+    "thresholdScore": 5,
+    "projectName": "Your Project Name",
+    "usedResearch": true
+  },
+  "complexityAnalysis": [
+    {
+      "taskId": 1,
+      "taskTitle": "Refactor Configuration Loader",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the implementation of a robust Pydantic-based configuration system supporting hierarchical settings, YAML/JSON files, environment variable prefixing, CLI overrides, validation, default values, and documentation into clear, testable subtasks.",
+      "reasoning": "This task involves integrating multiple configuration sources, hierarchical validation, and documentation, which increases both code and cognitive complexity. Ensuring robust validation and seamless overrides across sources is non-trivial and requires careful design."
+    },
+    {
+      "taskId": 2,
+      "taskTitle": "Implement Encrypted Secret Manager",
+      "complexityScore": 8,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "List the key steps to implement a secure SecretManager class supporting keyring and KMS backends, AES-GCM encryption, secret rotation, sub-account association, and fallback mechanisms.",
+      "reasoning": "Security-sensitive code with multiple backend support, encryption, and rotation logic adds significant complexity. Proper error handling and fallback mechanisms are critical to avoid credential leaks or loss."
+    },
+    {
+      "taskId": 3,
+      "taskTitle": "Harden CCXT Exchange Wrapper",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Identify the main components required to extend the CCXT wrapper with rate limiting, error classification, connection pooling, retry logic, logging, IP whitelisting, and a unified interface.",
+      "reasoning": "Enhancing a third-party wrapper with advanced error handling, rate limiting, and extensibility for both REST and WebSocket interfaces introduces moderate to high complexity, especially for robust production use."
+    },
+    {
+      "taskId": 4,
+      "taskTitle": "Implement WebSocket Market Data Listener",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Enumerate the steps to build an asyncio-based WebSocket client for Binance, including connection management, heartbeats, back-pressure handling, message queuing, and multi-symbol support.",
+      "reasoning": "Real-time streaming, reconnection, and back-pressure control require careful asynchronous design and robust error handling, making this a moderately complex networking task."
+    },
+    {
+      "taskId": 5,
+      "taskTitle": "Set Up Redis Pub/Sub Event Bus",
+      "complexityScore": 6,
+      "recommendedSubtasks": 4,
+      "expansionPrompt": "Detail the subtasks for implementing a Redis-based event bus with publish/subscribe, event type definitions, serialization, channel management, and reconnection/error handling.",
+      "reasoning": "While Redis Pub/Sub is well-supported, ensuring robust serialization, event typing, and reconnection logic adds moderate complexity."
+    },
+    {
+      "taskId": 6,
+      "taskTitle": "Implement Risk Manager Core",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the development of a risk manager that tracks positions, enforces limits, implements kill-switches, fetches data from Binance, and calculates risk scores into actionable subtasks.",
+      "reasoning": "Risk management involves real-time data aggregation, enforcement logic, and integration with external APIs, all of which require careful design and thorough testing."
+    },
+    {
+      "taskId": 7,
+      "taskTitle": "Create Database Models and Migration System",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "List the steps to define SQLAlchemy models, implement Alembic migrations, design indexes, add audit fields, create CRUD repositories, and set up connection pooling and retries.",
+      "reasoning": "Database modeling and migrations are standard but require attention to schema design, migration safety, and efficient access patterns."
+    },
+    {
+      "taskId": 8,
+      "taskTitle": "Implement CLI Command Framework",
+      "complexityScore": 5,
+      "recommendedSubtasks": 4,
+      "expansionPrompt": "Identify the main subtasks for setting up a CLI framework with command groups, help documentation, shared utilities, global flags, and plugin extensibility.",
+      "reasoning": "CLI frameworks are well-supported by libraries, but extensibility and shared utilities require thoughtful structure."
+    },
+    {
+      "taskId": 9,
+      "taskTitle": "Develop Interactive Setup Wizard",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Break down the implementation of an interactive setup wizard for Binance sub-account and API key creation, including validation, permission checks, secure storage, resuming, and error handling.",
+      "reasoning": "Interactive flows with external API integration, validation, and secure credential handling add significant complexity and require robust UX and error management."
+    },
+    {
+      "taskId": 10,
+      "taskTitle": "Implement Agent Base Classes",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "List the key steps to develop agent base classes with standard interfaces, utilities for analysis and order management, lifecycle hooks, and support for sync/async implementations.",
+      "reasoning": "Establishing robust, extensible base classes for trading agents with both sync and async support requires careful interface and utility design."
+    },
+    {
+      "taskId": 11,
+      "taskTitle": "Implement Basic Trading Agents",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Enumerate the subtasks for implementing momentum and RL-based trading agents, including configuration, initialization, market data handling, signal generation, and risk integration.",
+      "reasoning": "Implementing both rule-based and ML-based agents with configuration and risk integration is moderately complex, especially for ML training/inference support."
+    },
+    {
+      "taskId": 12,
+      "taskTitle": "Develop Async Orchestrator Engine",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the development of an asyncio-based orchestrator managing agent lifecycles, health monitoring, restarts, configuration loading, event hooks, and supervision trees.",
+      "reasoning": "Coordinating multiple async agents, lifecycle management, and system event handling is architecturally complex and critical for system reliability."
+    },
+    {
+      "taskId": 13,
+      "taskTitle": "Implement One-Command Launch System",
+      "complexityScore": 6,
+      "recommendedSubtasks": 4,
+      "expansionPrompt": "List the steps to implement a CLI 'start' command that initializes all components, handles dependency order, configuration, signal handling, and supports multiple modes.",
+      "reasoning": "Coordinating startup and shutdown of multiple components is moderately complex but manageable with good structure."
+    },
+    {
+      "taskId": 14,
+      "taskTitle": "Implement Trade Execution and Tracking",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Detail the subtasks for building a trade execution service, order management, fill tracking, position reconciliation, database integration, and support for multiple order types.",
+      "reasoning": "Trade execution and reconciliation are critical, require robust error handling, and must be tightly integrated with external APIs and the database."
+    },
+    {
+      "taskId": 15,
+      "taskTitle": "Develop PnL and Wallet Commands",
+      "complexityScore": 6,
+      "recommendedSubtasks": 4,
+      "expansionPrompt": "Break down the implementation of CLI commands for PnL and wallet info, including data aggregation, filtering, formatting, and export functionality.",
+      "reasoning": "Aggregating and presenting financial data is moderately complex, especially with filtering and export requirements."
+    },
+    {
+      "taskId": 16,
+      "taskTitle": "Implement ASCII Agent Graph Visualization",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "List the steps to implement an ASCII agent network visualization with real-time updates, interactivity, layout algorithms, and performance metrics.",
+      "reasoning": "Terminal-based visualization with real-time updates and interactivity is moderately complex, especially for larger networks."
+    },
+    {
+      "taskId": 17,
+      "taskTitle": "Implement Health Monitoring and Watchdog",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Enumerate the subtasks for developing a health monitoring and watchdog system, including status tracking, automatic restarts, circuit breakers, metrics collection, and alerting.",
+      "reasoning": "Health monitoring and automated recovery are essential for reliability and require careful design to avoid false positives and ensure robustness."
+    },
+    {
+      "taskId": 18,
+      "taskTitle": "Set Up Prometheus Metrics Export",
+      "complexityScore": 5,
+      "recommendedSubtasks": 4,
+      "expansionPrompt": "Detail the steps to integrate Prometheus metrics, define key metrics, implement a metrics server, create custom collectors, and add tagging and histograms.",
+      "reasoning": "Metrics export is well-supported by libraries, but defining custom collectors and tagging adds some complexity."
+    },
+    {
+      "taskId": 19,
+      "taskTitle": "Implement Logging and Alerting System",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Break down the implementation of structured logging, log rotation, context injection, centralized collection, alerting, and search/filter utilities.",
+      "reasoning": "Comprehensive logging and alerting with structured logs, context, and integration with external systems is moderately complex and critical for observability."
+    },
+    {
+      "taskId": 20,
+      "taskTitle": "Develop Airflow DAGs for Model Retraining",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "List the key steps for creating Airflow DAGs for ML retraining, including data extraction, preprocessing, training, validation, deployment, versioning, and notifications.",
+      "reasoning": "Airflow DAGs for ML workflows are moderately complex, especially with versioning, rollback, and notification requirements."
+    },
+    {
+      "taskId": 21,
+      "taskTitle": "Create Docker Compose Setup",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Enumerate the subtasks for developing a Docker Compose setup with service definitions, networking, health checks, environment configs, startup order, and documentation.",
+      "reasoning": "Multi-service Docker Compose setups are moderately complex, especially with health checks, dependencies, and environment-specific configs."
+    },
+    {
+      "taskId": 22,
+      "taskTitle": "Implement Comprehensive Error Handling",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Break down the steps to enhance error handling across components, including exception hierarchies, context, graceful degradation, reporting, retries, and logging.",
+      "reasoning": "Comprehensive error handling across a distributed system is moderately to highly complex, requiring consistency and robust reporting."
+    },
+    {
+      "taskId": 23,
+      "taskTitle": "Implement Comprehensive Test Suite",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "List the steps to develop a test suite covering unit, integration, system, and performance tests, with fixtures, coverage reporting, and property-based testing.",
+      "reasoning": "A thorough test suite covering all levels and enforcing coverage is highly complex and critical for system reliability."
+    },
+    {
+      "taskId": 24,
+      "taskTitle": "Create User and Developer Documentation",
+      "complexityScore": 5,
+      "recommendedSubtasks": 4,
+      "expansionPrompt": "Detail the subtasks for creating user and developer documentation, including installation guides, API references, tutorials, CLI docs, troubleshooting, and auto-generation.",
+      "reasoning": "Documentation is essential but less technically complex, though breadth and clarity are important for usability."
+    },
+    {
+      "taskId": 25,
+      "taskTitle": "Implement CI/CD Pipeline",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Enumerate the steps to set up a CI/CD pipeline with linting, testing, building, deployment, security scanning, notifications, and documentation updates.",
+      "reasoning": "CI/CD pipelines are well-supported but require careful configuration for multi-stage workflows, security, and automation."
+    }
+  ]
+}

@@ -1,0 +1,161 @@
+groups:
+- name: application_api
+  rules:
+  # High API error rate
+  - alert: HighAPIErrorRate
+    expr: sum(rate(http_requests_total{status_code=~"5.."}[5m])) by (endpoint) / sum(rate(http_requests_total[5m])) by (endpoint) > 0.05
+    for: 5m
+    labels:
+      severity: warning
+      service: api
+    annotations:
+      summary: "High API error rate for {{ $labels.endpoint }}"
+      description: "Error rate for {{ $labels.endpoint }} has been above 5% for the last 5 minutes."
+      dashboard: "http://grafana:3000/d/api_performance"
+      runbook: "https://wiki.example.com/runbooks/application/high_api_error_rate"
+
+  # Critical API error rate
+  - alert: CriticalAPIErrorRate
+    expr: sum(rate(http_requests_total{status_code=~"5.."}[5m])) by (endpoint) / sum(rate(http_requests_total[5m])) by (endpoint) > 0.10
+    for: 3m
+    labels:
+      severity: critical
+      service: api
+    annotations:
+      summary: "Critical API error rate for {{ $labels.endpoint }}"
+      description: "Error rate for {{ $labels.endpoint }} has been above 10% for the last 3 minutes. Immediate action required."
+      dashboard: "http://grafana:3000/d/api_performance"
+      runbook: "https://wiki.example.com/runbooks/application/high_api_error_rate"
+
+  # High API latency
+  - alert: HighAPILatency
+    expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint)) > 1
+    for: 5m
+    labels:
+      severity: warning
+      service: api
+    annotations:
+      summary: "High API latency for {{ $labels.endpoint }}"
+      description: "95th percentile of request duration for {{ $labels.endpoint }} has been above 1s for the last 5 minutes."
+      dashboard: "http://grafana:3000/d/api_performance"
+      runbook: "https://wiki.example.com/runbooks/application/high_api_latency"
+
+  # Critical API latency
+  - alert: CriticalAPILatency
+    expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint)) > 2
+    for: 3m
+    labels:
+      severity: critical
+      service: api
+    annotations:
+      summary: "Critical API latency for {{ $labels.endpoint }}"
+      description: "95th percentile of request duration for {{ $labels.endpoint }} has been above 2s for the last 3 minutes. Immediate action required."
+      dashboard: "http://grafana:3000/d/api_performance"
+      runbook: "https://wiki.example.com/runbooks/application/high_api_latency"
+
+  # High API traffic
+  - alert: HighAPITraffic
+    expr: sum(rate(http_requests_total[5m])) by (endpoint) > 3 * avg_over_time(sum(rate(http_requests_total[5m])) by (endpoint)[1h:5m])
+    for: 5m
+    labels:
+      severity: warning
+      service: api
+    annotations:
+      summary: "High API traffic for {{ $labels.endpoint }}"
+      description: "Request rate for {{ $labels.endpoint }} has been more than 3x the hourly average for the last 5 minutes."
+      dashboard: "http://grafana:3000/d/api_performance"
+      runbook: "https://wiki.example.com/runbooks/application/high_api_traffic"
+
+- name: application_service
+  rules:
+  # High service restart rate
+  - alert: HighServiceRestartRate
+    expr: changes(process_start_time_seconds{job=~"trading_exporter|api"}[15m]) > 2
+    labels:
+      severity: warning
+      service: application
+    annotations:
+      summary: "High restart rate for {{ $labels.job }} service"
+      description: "{{ $labels.job }} has restarted more than 2 times in the last 15 minutes."
+      dashboard: "http://grafana:3000/d/service_health"
+      runbook: "https://wiki.example.com/runbooks/application/high_service_restart"
+
+  # High service memory usage
+  - alert: HighServiceMemoryUsage
+    expr: process_resident_memory_bytes / on(instance) node_memory_MemTotal_bytes * 100 > 60
+    for: 10m
+    labels:
+      severity: warning
+      service: application
+    annotations:
+      summary: "High memory usage for {{ $labels.job }} service"
+      description: "{{ $labels.job }} on {{ $labels.instance }} has been using more than 60% of system memory for the last 10 minutes."
+      dashboard: "http://grafana:3000/d/service_health"
+      runbook: "https://wiki.example.com/runbooks/application/high_service_memory"
+
+  # Critical service memory usage
+  - alert: CriticalServiceMemoryUsage
+    expr: process_resident_memory_bytes / on(instance) node_memory_MemTotal_bytes * 100 > 80
+    for: 5m
+    labels:
+      severity: critical
+      service: application
+    annotations:
+      summary: "Critical memory usage for {{ $labels.job }} service"
+      description: "{{ $labels.job }} on {{ $labels.instance }} has been using more than 80% of system memory for the last 5 minutes. Immediate action required."
+      dashboard: "http://grafana:3000/d/service_health"
+      runbook: "https://wiki.example.com/runbooks/application/high_service_memory"
+
+  # Service high CPU usage
+  - alert: HighServiceCPUUsage
+    expr: rate(process_cpu_seconds_total[5m]) * 100 > 80
+    for: 10m
+    labels:
+      severity: warning
+      service: application
+    annotations:
+      summary: "High CPU usage for {{ $labels.job }} service"
+      description: "{{ $labels.job }} on {{ $labels.instance }} has been using more than 80% CPU for the last 10 minutes."
+      dashboard: "http://grafana:3000/d/service_health"
+      runbook: "https://wiki.example.com/runbooks/application/high_service_cpu"
+
+- name: application_queue
+  rules:
+  # High queue size
+  - alert: HighMessageQueueSize
+    expr: application_message_queue_size > 1000
+    for: 10m
+    labels:
+      severity: warning
+      service: application
+    annotations:
+      summary: "High message queue size for {{ $labels.queue }}"
+      description: "Message queue {{ $labels.queue }} has more than 1000 messages for the last 10 minutes."
+      dashboard: "http://grafana:3000/d/queue_metrics"
+      runbook: "https://wiki.example.com/runbooks/application/high_queue_size"
+
+  # Critical queue size
+  - alert: CriticalMessageQueueSize
+    expr: application_message_queue_size > 5000
+    for: 5m
+    labels:
+      severity: critical
+      service: application
+    annotations:
+      summary: "Critical message queue size for {{ $labels.queue }}"
+      description: "Message queue {{ $labels.queue }} has more than 5000 messages for the last 5 minutes. Immediate action required."
+      dashboard: "http://grafana:3000/d/queue_metrics"
+      runbook: "https://wiki.example.com/runbooks/application/high_queue_size"
+
+  # High queue processing time
+  - alert: HighQueueProcessingTime
+    expr: application_message_processing_seconds > 10
+    for: 10m
+    labels:
+      severity: warning
+      service: application
+    annotations:
+      summary: "High queue processing time for {{ $labels.queue }}"
+      description: "Message processing time for {{ $labels.queue }} has been above 10s for the last 10 minutes."
+      dashboard: "http://grafana:3000/d/queue_metrics"
+      runbook: "https://wiki.example.com/runbooks/application/high_queue_processing_time" 
